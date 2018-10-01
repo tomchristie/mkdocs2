@@ -1,6 +1,7 @@
 #!/bin/sh -e
 
 export PACKAGE=mkdocs2
+export PYTHONPATH=.:${PYTHONPATH}
 export PREFIX=""
 if [ -d 'venv' ] ; then
     export PREFIX="venv/bin/"
