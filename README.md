@@ -8,6 +8,8 @@ I'd like it to be suitable for a wider range of static site generation.
 This isn't particularly intended for external use yet, but for me to have
 a public working space for progressing the project.
 
+**mkdocs.yml**:
+
 ```yaml
 site:
     name: Example
