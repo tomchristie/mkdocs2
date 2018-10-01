@@ -1,6 +1,8 @@
 #!/bin/sh -e
 
 export PACKAGE=mkdocs2
+export PYTHONPATH=.:${PYTHONPATH}
+export PYTHONVERSION=`python -c 'import sys; print("%d.%d" % sys.version_info[:2])'`
 export PREFIX=""
 if [ -d 'venv' ] ; then
     export PREFIX="venv/bin/"
@@ -10,4 +12,6 @@ set -x
 
 ${PREFIX}pytest --cov ${PACKAGE} --cov tests --cov-fail-under 100 ./tests/
 ${PREFIX}mypy --ignore-missing-imports --disallow-untyped-defs ${PACKAGE}
-${PREFIX}black ${PACKAGE} tests --check
+if [[ ${PYTHONVERSION} == "3.6" ]]; then
+    ${PREFIX}black ${PACKAGE} tests --check
+fi
