@@ -1,0 +1,10 @@
+click
+jinja2
+markdown
+pyyaml
+
+# Testing
+black
+mypy
+pytest
+pytest-cov

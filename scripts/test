@@ -1,0 +1,13 @@
+#!/bin/sh -e
+
+export PACKAGE=mkdocs2
+export PREFIX=""
+if [ -d 'venv' ] ; then
+    export PREFIX="venv/bin/"
+fi
+
+set -x
+
+${PREFIX}pytest --cov ${PACKAGE} --cov tests --cov-fail-under 100 ./tests/
+${PREFIX}mypy --ignore-missing-imports --disallow-untyped-defs ${PACKAGE}
+${PREFIX}black ${PACKAGE} tests --check
