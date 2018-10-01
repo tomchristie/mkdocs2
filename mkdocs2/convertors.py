@@ -63,7 +63,9 @@ class MarkdownConvertor(Convertor):
         from mkdocs2.core import url_function_for_file
 
         url_func = url_function_for_file(file, env.files, base_url=self.base_url)
-        md = markdown.Markdown(extensions=[TransformURLExtension(url_func=url_func)])
+        md = markdown.Markdown(
+            extensions=[TransformURLExtension(url_func=url_func), "fenced_code"]
+        )
 
         template = self.env.get_template("base.html")
         text = file.read_input_text()

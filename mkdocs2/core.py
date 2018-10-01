@@ -103,8 +103,8 @@ def url_function_for_file(
 
         if path.startswith("/"):
             # Path-absolute URLs are treated as-is.
-            url = path.lstrip("/")
-            files.get_by_url_path(url)
+            files.get_by_url_path(path)
+            url = path
         else:
             # Path-relative URLs are treated as links to files.
             # We resolve which file is being referenced in order to determine
@@ -116,7 +116,9 @@ def url_function_for_file(
             url = file.url
 
         if base_url is None:
-            path = posixpath.relpath("/" + url, "/" + from_file.url)
+            path = posixpath.relpath(url, from_file.url)
+            if url.endswith("/") and not path.endswith("/"):
+                path += "/"
         else:
             scheme, netloc, path, _, _, _ = urlparse(urljoin(base_url, url))
 

@@ -49,8 +49,10 @@ class File:
     def url(self) -> str:
         dirname, basename = os.path.split(self.output_rel_path)
         if basename == "index.html":
-            return dirname.replace(os.path.sep, "/")
-        return self.output_rel_path.replace(os.path.sep, "/")
+            if not dirname:
+                return "/"
+            return "/" + dirname.replace(os.path.sep, "/") + "/"
+        return "/" + self.output_rel_path.replace(os.path.sep, "/")
 
     @property
     def full_input_path(self) -> str:
