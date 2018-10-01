@@ -176,7 +176,7 @@ def test_urls_for_files():
         output_dir="output",
         convertor=markdown_convertor,
     )
-    assert file.url == ""
+    assert file.url == "/"
 
     file = types.File(
         input_rel_path="page.html",
@@ -185,7 +185,7 @@ def test_urls_for_files():
         output_dir="output",
         convertor=markdown_convertor,
     )
-    assert file.url == "page.html"
+    assert file.url == "/page.html"
 
 
 def test_url_function():
@@ -220,69 +220,69 @@ def test_url_function():
         ]
     )
 
-    assert files[0].url == ""
-    assert files[1].url == "topics/a"
-    assert files[2].url == "topics/b"
+    assert files[0].url == "/"
+    assert files[1].url == "/topics/a/"
+    assert files[2].url == "/topics/b/"
 
     # No base URL.
     url = core.url_function_for_file(files[0], files)
     assert url("#anchor") == "#anchor"
     assert url("https://www.example.com") == "https://www.example.com"
-    assert url("topics/a.md") == "topics/a"
-    assert url("topics/b.md") == "topics/b"
-    assert url("/topics/a") == "topics/a"
-    assert url("/topics/b") == "topics/b"
+    assert url("topics/a.md") == "topics/a/"
+    assert url("topics/b.md") == "topics/b/"
+    assert url("/topics/a/") == "topics/a/"
+    assert url("/topics/b/") == "topics/b/"
 
     url = core.url_function_for_file(files[1], files)
-    assert url("../index.md") == "../.."
-    assert url("b.md") == "../b"
-    assert url("/") == "../.."
-    assert url("/topics/b") == "../b"
+    assert url("../index.md") == "../../"
+    assert url("b.md") == "../b/"
+    assert url("/") == "../../"
+    assert url("/topics/b/") == "../b/"
 
     url = core.url_function_for_file(files[2], files)
-    assert url("../index.md") == "../.."
-    assert url("a.md#anchor") == "../a#anchor"
-    assert url("/") == "../.."
-    assert url("/topics/a#anchor") == "../a#anchor"
+    assert url("../index.md") == "../../"
+    assert url("a.md#anchor") == "../a/#anchor"
+    assert url("/") == "../../"
+    assert url("/topics/a/#anchor") == "../a/#anchor"
 
     # Host relative base URL.
     url = core.url_function_for_file(files[0], files, base_url="/")
     assert url("#anchor") == "#anchor"
     assert url("https://www.example.com") == "https://www.example.com"
-    assert url("topics/a.md") == "/topics/a"
-    assert url("topics/b.md") == "/topics/b"
-    assert url("/topics/a") == "/topics/a"
-    assert url("/topics/b") == "/topics/b"
+    assert url("topics/a.md") == "/topics/a/"
+    assert url("topics/b.md") == "/topics/b/"
+    assert url("/topics/a/") == "/topics/a/"
+    assert url("/topics/b/") == "/topics/b/"
 
     url = core.url_function_for_file(files[1], files, base_url="/")
     assert url("../index.md") == "/"
-    assert url("b.md") == "/topics/b"
+    assert url("b.md") == "/topics/b/"
     assert url("/") == "/"
-    assert url("/topics/b") == "/topics/b"
+    assert url("/topics/b/") == "/topics/b/"
 
     url = core.url_function_for_file(files[2], files, base_url="/")
     assert url("../index.md") == "/"
-    assert url("a.md#anchor") == "/topics/a#anchor"
+    assert url("a.md#anchor") == "/topics/a/#anchor"
     assert url("/") == "/"
-    assert url("/topics/a#anchor") == "/topics/a#anchor"
+    assert url("/topics/a/#anchor") == "/topics/a/#anchor"
 
     # Absolute base URL.
     url = core.url_function_for_file(files[0], files, base_url="https://example.com")
     assert url("#anchor") == "#anchor"
     assert url("https://www.example.com") == "https://www.example.com"
-    assert url("topics/a.md") == "https://example.com/topics/a"
-    assert url("topics/b.md") == "https://example.com/topics/b"
-    assert url("/topics/a") == "https://example.com/topics/a"
-    assert url("/topics/b") == "https://example.com/topics/b"
+    assert url("topics/a.md") == "https://example.com/topics/a/"
+    assert url("topics/b.md") == "https://example.com/topics/b/"
+    assert url("/topics/a/") == "https://example.com/topics/a/"
+    assert url("/topics/b/") == "https://example.com/topics/b/"
 
     url = core.url_function_for_file(files[1], files, base_url="https://example.com")
-    assert url("../index.md") == "https://example.com"
-    assert url("b.md") == "https://example.com/topics/b"
-    assert url("/") == "https://example.com"
-    assert url("/topics/b") == "https://example.com/topics/b"
+    assert url("../index.md") == "https://example.com/"
+    assert url("b.md") == "https://example.com/topics/b/"
+    assert url("/") == "https://example.com/"
+    assert url("/topics/b/") == "https://example.com/topics/b/"
 
     url = core.url_function_for_file(files[2], files, base_url="https://example.com")
-    assert url("../index.md") == "https://example.com"
-    assert url("a.md#anchor") == "https://example.com/topics/a#anchor"
-    assert url("/") == "https://example.com"
-    assert url("/topics/a#anchor") == "https://example.com/topics/a#anchor"
+    assert url("../index.md") == "https://example.com/"
+    assert url("a.md#anchor") == "https://example.com/topics/a/#anchor"
+    assert url("/") == "https://example.com/"
+    assert url("/topics/a/#anchor") == "https://example.com/topics/a/#anchor"
