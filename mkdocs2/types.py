@@ -124,6 +124,9 @@ class NavGroup:
     An item in the site-wide navigation that references a menu group.
     """
 
+    is_page = False
+    is_group = True
+
     def __init__(self, title: str, children: typing.List["NavItem"]) -> None:
         self.title = title
         self.children = children
@@ -143,6 +146,9 @@ class NavPage:
     """
     An item in the site-wide navigation that references a page.
     """
+
+    is_page = True
+    is_group = False
 
     def __init__(self, title: str, file: File) -> None:
         self.title = title
