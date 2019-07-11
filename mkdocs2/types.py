@@ -24,14 +24,14 @@ class File:
 
     def __init__(
         self,
-        input_rel_path: str,
-        output_rel_path: str,
+        input_path: str,
+        output_path: str,
         input_dir: str,
         output_dir: str,
         convertor: Convertor,
     ) -> None:
-        self.input_rel_path = input_rel_path
-        self.output_rel_path = output_rel_path
+        self.input_path = input_path
+        self.output_path = output_path
         self.input_dir = input_dir
         self.output_dir = output_dir
         self.convertor = convertor
@@ -39,28 +39,28 @@ class File:
 
     def __eq__(self, other: typing.Any) -> bool:
         return (
-            self.input_rel_path == other.input_rel_path
-            and self.output_rel_path == other.output_rel_path
+            self.input_path == other.input_path
+            and self.output_path == other.output_path
             and self.input_dir == other.input_dir
             and self.output_dir == other.output_dir
         )
 
     @property
     def url(self) -> str:
-        dirname, basename = os.path.split(self.output_rel_path)
+        dirname, basename = os.path.split(self.output_path)
         if basename == "index.html":
             if not dirname:
                 return "/"
             return "/" + dirname.replace(os.path.sep, "/") + "/"
-        return "/" + self.output_rel_path.replace(os.path.sep, "/")
+        return "/" + self.output_path.replace(os.path.sep, "/")
 
     @property
     def full_input_path(self) -> str:
-        return os.path.join(self.input_dir, self.input_rel_path)
+        return os.path.join(self.input_dir, self.input_path)
 
     @property
     def full_output_path(self) -> str:
-        return os.path.join(self.output_dir, self.output_rel_path)
+        return os.path.join(self.output_dir, self.output_path)
 
     def read_input_text(self) -> str:
         with open(self.full_input_path, "r") as input_file:
@@ -105,11 +105,11 @@ class Files:
         return self
 
     def append(self, file: File) -> None:
-        existing = self._files_by_input_path.get(file.input_rel_path)
+        existing = self._files_by_input_path.get(file.input_path)
         if existing is not None:
             self._files_list.remove(existing)
         self._files_list.append(file)
-        self._files_by_input_path[file.input_rel_path] = file
+        self._files_by_input_path[file.input_path] = file
         self._files_by_url_path[file.url] = file
 
     def get_by_input_path(self, path: str) -> File:

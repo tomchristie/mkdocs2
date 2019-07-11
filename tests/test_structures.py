@@ -38,22 +38,22 @@ def test_gather_files(tmpdir):
     assert files == types.Files(
         [
             types.File(
-                input_rel_path="a.md",
-                output_rel_path=os.path.join("a", "index.html"),
+                input_path="a.md",
+                output_path=os.path.join("a", "index.html"),
                 input_dir=input_dir,
                 output_dir=output_dir,
                 convertor=markdown_convertor,
             ),
             types.File(
-                input_rel_path=os.path.join("b", "b.md"),
-                output_rel_path=os.path.join("b", "b", "index.html"),
+                input_path=os.path.join("b", "b.md"),
+                output_path=os.path.join("b", "b", "index.html"),
                 input_dir=input_dir,
                 output_dir=output_dir,
                 convertor=markdown_convertor,
             ),
             types.File(
-                input_rel_path="index.md",
-                output_rel_path="index.html",
+                input_path="index.md",
+                output_path="index.html",
                 input_dir=input_dir,
                 output_dir=output_dir,
                 convertor=markdown_convertor,
@@ -91,8 +91,8 @@ def test_overwrite_files(tmpdir):
     assert files == types.Files(
         [
             types.File(
-                input_rel_path="a.txt",
-                output_rel_path="a.txt",
+                input_path="a.txt",
+                output_path="a.txt",
                 input_dir=primary_input_dir,
                 output_dir=output_dir,
                 convertor=static_file_convertor,
@@ -112,22 +112,22 @@ def test_load_nav():
     files = types.Files(
         [
             types.File(
-                input_rel_path="index.md",
-                output_rel_path="index.html",
+                input_path="index.md",
+                output_path="index.html",
                 input_dir=input_dir,
                 output_dir=output_dir,
                 convertor=markdown_convertor,
             ),
             types.File(
-                input_rel_path=os.path.join("topics", "a.md"),
-                output_rel_path=os.path.join("topics", "a", "index.html"),
+                input_path=os.path.join("topics", "a.md"),
+                output_path=os.path.join("topics", "a", "index.html"),
                 input_dir=input_dir,
                 output_dir=output_dir,
                 convertor=markdown_convertor,
             ),
             types.File(
-                input_rel_path=os.path.join("topics", "b.md"),
-                output_rel_path=os.path.join("topics", "b", "index.html"),
+                input_path=os.path.join("topics", "b.md"),
+                output_path=os.path.join("topics", "b", "index.html"),
                 input_dir=input_dir,
                 output_dir=output_dir,
                 convertor=markdown_convertor,
@@ -170,8 +170,8 @@ def test_urls_for_files():
     markdown_convertor = convertors.MarkdownConvertor(config=config)
 
     file = types.File(
-        input_rel_path="index.md",
-        output_rel_path="index.html",
+        input_path="index.md",
+        output_path="index.html",
         input_dir="input",
         output_dir="output",
         convertor=markdown_convertor,
@@ -179,8 +179,8 @@ def test_urls_for_files():
     assert file.url == "/"
 
     file = types.File(
-        input_rel_path="page.html",
-        output_rel_path="page.html",
+        input_path="page.html",
+        output_path="page.html",
         input_dir="input",
         output_dir="output",
         convertor=markdown_convertor,
@@ -197,22 +197,22 @@ def test_url_function():
     files = types.Files(
         [
             types.File(
-                input_rel_path="index.md",
-                output_rel_path="index.html",
+                input_path="index.md",
+                output_path="index.html",
                 input_dir=input_dir,
                 output_dir=output_dir,
                 convertor=markdown_convertor,
             ),
             types.File(
-                input_rel_path=os.path.join("topics", "a.md"),
-                output_rel_path=os.path.join("topics", "a", "index.html"),
+                input_path=os.path.join("topics", "a.md"),
+                output_path=os.path.join("topics", "a", "index.html"),
                 input_dir=input_dir,
                 output_dir=output_dir,
                 convertor=markdown_convertor,
             ),
             types.File(
-                input_rel_path=os.path.join("topics", "b.md"),
-                output_rel_path=os.path.join("topics", "b", "index.html"),
+                input_path=os.path.join("topics", "b.md"),
+                output_path=os.path.join("topics", "b", "index.html"),
                 input_dir=input_dir,
                 output_dir=output_dir,
                 convertor=markdown_convertor,

@@ -54,16 +54,16 @@ def gather_files(
                 sub_dir=next_sub_dir,
             )
         else:
-            input_rel_path = os.path.join(sub_dir, basename)
+            input_path = os.path.join(sub_dir, basename)
             convertor = default_convertor
             for pattern, file_convertor in file_convertors.items():
-                if fnmatch.fnmatch(input_rel_path, pattern):
+                if fnmatch.fnmatch(input_path, pattern):
                     convertor = file_convertor
                     break
-            output_rel_path = convertor.get_output_path(input_rel_path)
+            output_path = convertor.get_output_path(input_path)
             file = types.File(
-                input_rel_path=input_rel_path,
-                output_rel_path=output_rel_path,
+                input_path=input_path,
+                output_path=output_path,
                 input_dir=input_dir,
                 output_dir=output_dir,
                 convertor=convertor,
@@ -110,7 +110,7 @@ def url_function_for_file(
             # We resolve which file is being referenced in order to determine
             # what the URL should be.
             path = path.replace("/", os.path.sep)
-            path = os.path.join(os.path.dirname(from_file.input_rel_path), path)
+            path = os.path.join(os.path.dirname(from_file.input_path), path)
             path = os.path.normpath(path)
             file = files.get_by_input_path(path)
             url = file.url
