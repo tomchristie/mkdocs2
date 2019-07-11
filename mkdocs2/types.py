@@ -35,7 +35,6 @@ class File:
         self.input_dir = input_dir
         self.output_dir = output_dir
         self.convertor = convertor
-        self.nav_page = None  # type: typing.Optional[NavPage]
 
     def __eq__(self, other: typing.Any) -> bool:
         return (
@@ -127,7 +126,10 @@ class NavGroup:
     is_page = False
     is_group = True
 
-    def __init__(self, title: str, children: typing.List["NavItem"]) -> None:
+    def __init__(
+        self, title: str, children: typing.List[typing.Union["NavGroup", "NavPage"]]
+    ) -> None:
+        self.is_active = False
         self.title = title
         self.children = children
         self.parent = None  # type: typing.Optional[NavGroup]
@@ -141,6 +143,15 @@ class NavGroup:
             and self.children == other.children
         )
 
+    def activate(self, file: File) -> None:
+        for child in self.children:
+            child.activate(file)
+
+    def deactivate(self) -> None:
+        self.is_active = False
+        for child in self.children:
+            child.deactivate()
+
 
 class NavPage:
     """
@@ -151,10 +162,10 @@ class NavPage:
     is_group = False
 
     def __init__(self, title: str, file: File) -> None:
+        self.is_active = False
         self.title = title
         self.file = file
         self.parent = None  # type: typing.Optional[NavGroup]
-        file.nav_page = self
 
     def __eq__(self, other: typing.Any) -> bool:
         return (
@@ -163,8 +174,37 @@ class NavPage:
             and self.file == other.file
         )
 
+    def activate(self, file: File) -> None:
+        if file == self.file:
+            nav = self
+            while nav is not None:
+                nav.is_active = True
+                nav = nav.parent
 
-NavItem = typing.Union[NavGroup, NavPage]
+    def deactivate(self) -> None:
+        self.is_active = False
+
+
+class Nav:
+    def __init__(self, items: typing.List[typing.Union[NavGroup, NavPage]]):
+        self.items = items
+
+    def __iter__(self) -> typing.Iterable[typing.Union[NavGroup, NavPage]]:
+        return iter(self.items)
+
+    def __getitem__(self, idx: int) -> typing.Union[NavGroup, NavPage]:
+        return self.items[idx]
+
+    def __eq__(self, other: typing.Any) -> bool:
+        return type(self) == type(other) and self.items == other.items
+
+    def activate(self, file: File) -> None:
+        for item in self.items:
+            item.activate(file)
+
+    def deactivate(self) -> None:
+        for item in self.items:
+            item.deactivate()
 
 
 class Env:
@@ -172,9 +212,7 @@ class Env:
     The entire set of build information.
     """
 
-    def __init__(
-        self, files: Files, nav: typing.List[NavItem], config: typing.Dict
-    ) -> None:
+    def __init__(self, files: Files, nav: Nav, config: typing.Dict) -> None:
         self.files = files
         self.nav = nav
         self.config = config

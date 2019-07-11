@@ -16,7 +16,7 @@ def build(config: typing.Dict) -> None:
     files = gather_files(
         input_dir=input_dir, output_dir=output_dir, file_convertors=file_convertors
     )
-    nav = load_nav_info(nav_info, files)
+    nav = load_nav(nav_info, files)
     env = types.Env(files, nav, config)
     for file in files:
         dirname = os.path.dirname(file.full_output_path)
@@ -72,21 +72,21 @@ def gather_files(
     return files
 
 
-def load_nav_info(nav_info: dict, files: types.Files) -> typing.List[types.NavItem]:
+def load_nav(nav_info: dict, files: types.Files) -> types.Nav:
     """
     Determine the navigation info.
     """
-    nav_items = []  # type: typing.List[types.NavItem]
+    nav_items = []  # type: typing.List[typing.Union[types.NavGroup, types.NavPage]]
     for title, child in nav_info.items():
         if isinstance(child, str):
             file = files.get_by_input_path(child)
             nav_page = types.NavPage(title=title, file=file)
             nav_items.append(nav_page)
         else:
-            children = load_nav_info(child, files)
-            nav_group = types.NavGroup(title=title, children=children)
+            child_nav = load_nav(child, files)
+            nav_group = types.NavGroup(title=title, children=child_nav.items)
             nav_items.append(nav_group)
-    return nav_items
+    return types.Nav(nav_items)
 
 
 def url_function_for_file(

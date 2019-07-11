@@ -143,17 +143,19 @@ def test_load_nav():
         },
     }
 
-    nav = core.load_nav_info(nav_info, files)
-    assert nav == [
-        types.NavPage(title="Home", file=files[0]),
-        types.NavGroup(
-            title="Topics",
-            children=[
-                types.NavPage(title="Topic A", file=files[1]),
-                types.NavPage(title="Topic B", file=files[2]),
-            ],
-        ),
-    ]
+    nav = core.load_nav(nav_info, files)
+    assert nav == types.Nav(
+        [
+            types.NavPage(title="Home", file=files[0]),
+            types.NavGroup(
+                title="Topics",
+                children=[
+                    types.NavPage(title="Topic A", file=files[1]),
+                    types.NavPage(title="Topic B", file=files[2]),
+                ],
+            ),
+        ]
+    )
 
     home = nav[0]
     topics = nav[1]
@@ -163,6 +165,71 @@ def test_load_nav():
     assert topics.parent is None
     assert topic_a.parent is topics
     assert topic_b.parent is topics
+
+
+def test_activate_nav():
+    config = {"site": {"url": "/"}, "build": {"template_dir": "templates"}}
+    markdown_convertor = convertors.MarkdownConvertor(config=config)
+
+    files = types.Files(
+        [
+            types.File(
+                input_path="index.md",
+                output_path="index.html",
+                input_dir="docs",
+                output_dir="build",
+                convertor=markdown_convertor,
+            ),
+            types.File(
+                input_path=os.path.join("topics", "a.md"),
+                output_path=os.path.join("topics", "a", "index.html"),
+                input_dir="docs",
+                output_dir="build",
+                convertor=markdown_convertor,
+            ),
+            types.File(
+                input_path=os.path.join("topics", "b.md"),
+                output_path=os.path.join("topics", "b", "index.html"),
+                input_dir="docs",
+                output_dir="build",
+                convertor=markdown_convertor,
+            ),
+        ]
+    )
+
+    nav = types.Nav(
+        [
+            types.NavPage(title="Home", file=files[0]),
+            types.NavGroup(
+                title="Topics",
+                children=[
+                    types.NavPage(title="Topic A", file=files[1]),
+                    types.NavPage(title="Topic B", file=files[2]),
+                ],
+            ),
+        ]
+    )
+
+    nav.activate(files[0])
+    assert nav[0].is_active
+    assert not nav[1].is_active
+    assert not nav[1].children[0].is_active
+    assert not nav[1].children[0].is_active
+    nav.deactivate()
+
+    nav.activate(files[1])
+    assert not nav[0].is_active
+    assert nav[1].is_active
+    assert nav[1].children[0].is_active
+    assert not nav[1].children[1].is_active
+    nav.deactivate()
+
+    nav.activate(files[2])
+    assert not nav[0].is_active
+    assert nav[1].is_active
+    assert not nav[1].children[0].is_active
+    assert nav[1].children[1].is_active
+    nav.deactivate()
 
 
 def test_urls_for_files():
