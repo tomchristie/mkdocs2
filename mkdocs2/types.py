@@ -15,6 +15,9 @@ class Convertor:
     def get_output_path(self, input_path: str) -> str:
         raise NotImplementedError()  # pragma: no cover
 
+    def build_toc(self, file: "File", env: "Env") -> typing.Optional["TableOfContents"]:
+        raise NotImplementedError()  # pragma: no cover
+
     def convert(self, file: "File", env: "Env") -> None:
         raise NotImplementedError()  # pragma: no cover
 
@@ -37,6 +40,7 @@ class File:
         self.input_dir = input_dir
         self.output_dir = output_dir
         self.convertor = convertor
+        self.toc = None  # type: typing.Optional[TableOfContents]
 
     def __eq__(self, other: typing.Any) -> bool:
         return (
@@ -182,25 +186,38 @@ class NavPage:
     def walk_pages(self) -> typing.List["NavPage"]:
         return [self]
 
-    @property
-    def nav(self) -> "Nav":
+    def get_nav(self) -> "Nav":
+        """
+        Return the top-level `Nav` instance that the page is contained within.
+        """
         assert self._nav is not None
         return self._nav
 
     @property
     def url(self) -> str:
-        if self.nav.base_url is None:
-            if self.nav.active_page is None:
-                return self.file.url
-            else:
-                if self.file == self.nav.active_page.file:
-                    return "."
-                path = posixpath.relpath(self.file.url, self.nav.active_page.file.url)
-                if self.file.url.endswith("/") and not path.endswith("/"):
-                    path += "/"
-                return path
-        else:
-            return urljoin(self.nav.base_url, self.file.url)
+        """
+        Return a `url` for the page, depending on the `base_url`, and the
+        actively selected page.
+        """
+        nav = self.get_nav()
+
+        if nav.base_url is not None:
+            # We've got a `base_url` set, so create an absolute URL, using that.
+            return urljoin(nav.base_url, self.file.url)
+
+        if nav.active_page is None:
+            # We don't have page actively selected, just return an absolute path.
+            return self.file.url
+
+        if nav.active_page is self:
+            # This is the actively selected page.
+            return "."
+
+        # Return a relative path, from the actively selected page, to this one.
+        path = posixpath.relpath(self.file.url, nav.active_page.file.url)
+        if self.file.url.endswith("/") and not path.endswith("/"):
+            path += "/"
+        return path
 
 
 class Nav:
@@ -251,15 +268,32 @@ class Nav:
         return type(self) == type(other) and self.items == other.items
 
     def walk_pages(self) -> typing.List["NavPage"]:
+        """
+        Return a list of all the pages within the navigation, in order.
+        This doesn't include any group headers, just the pages themselves.
+        """
         pages = []
         for item in self.items:
             pages.extend(item.walk_pages())
         return pages
 
     def lookup_page(self, file: File) -> typing.Optional[NavPage]:
+        """
+        If `file` exists within the navigation, then return the corresponding
+        `NavPage` for it.
+        """
         return self.map_file_to_page.get(file)
 
     def activate(self, file: File) -> None:
+        """
+        Mark `file` as the page currently being rendered.
+
+        This sets `is_active = True` on the page and any parents, for the
+        purposes of rendering.
+
+        It also ensures that any accessed `.url` property on pages within the
+        nav can return a relative URL, if needed.
+        """
         self.active_page = self.lookup_page(file)
         nav_item = typing.cast(typing.Union[None, NavPage, NavGroup], self.active_page)
         while nav_item is not None:
@@ -267,11 +301,29 @@ class Nav:
             nav_item = nav_item.parent
 
     def deactivate(self) -> None:
+        """
+        Undo the current `activate()` state.
+        """
         nav_item = typing.cast(typing.Union[None, NavPage, NavGroup], self.active_page)
         while nav_item is not None:
             nav_item.is_active = False
             nav_item = nav_item.parent
         self.active_page = None
+
+
+class Header:
+    def __init__(
+        self, id: str, name: str, level: int, children: typing.List["Header"] = None
+    ) -> None:
+        self.name = name
+        self.id = id
+        self.level = level
+        self.children = [] if children is None else children
+
+
+class TableOfContents:
+    def __init__(self, headers: typing.List[Header]) -> None:
+        self.headers = headers
 
 
 class Env:

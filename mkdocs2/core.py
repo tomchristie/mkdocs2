@@ -19,6 +19,9 @@ def build(config: typing.Dict) -> None:
     nav = load_nav(nav_info, files, base_url)
     env = types.Env(files, nav, base_url, config)
     for file in files:
+        file.toc = file.convertor.build_toc(file, env)
+
+    for file in files:
         dirname = os.path.dirname(file.full_output_path)
         if not os.path.exists(dirname):
             os.makedirs(dirname)
