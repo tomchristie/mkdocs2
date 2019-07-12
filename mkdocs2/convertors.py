@@ -1,4 +1,5 @@
-from mkdocs2.types import Convertor, File, Env
+from mkdocs2.types import Convertor, File, Files, Env
+import functools
 import os
 import shutil
 import jinja2
@@ -10,8 +11,8 @@ from markdown.util import etree
 
 
 class URLProcessor(Treeprocessor):
-    def __init__(self, url_func: typing.Callable[[str], str]) -> None:
-        self.url_func = url_func
+    def __init__(self, convert_url: typing.Callable[[str], str]) -> None:
+        self.convert_url = convert_url
 
     def run(self, root: etree.ElementTree) -> etree.ElementTree:
         """
@@ -22,11 +23,11 @@ class URLProcessor(Treeprocessor):
         for element in root.iter():
             if element.tag == "a":
                 url = element.get("href")
-                url = self.url_func(url)
+                url = self.convert_url(url)
                 element.set("href", url)
             elif element.tag == "img":
                 url = element.get("src")
-                url = self.url_func(url)
+                url = self.convert_url(url)
                 element.set("src", url)
 
         return root
@@ -38,17 +39,16 @@ class TransformURLExtension(Extension):
     registers the Treeprocessor.
     """
 
-    def __init__(self, url_func: typing.Callable[[str], str]) -> None:
-        self.url_func = url_func
+    def __init__(self, convert_url: typing.Callable[[str], str]) -> None:
+        self.convert_url = convert_url
 
     def extendMarkdown(self, md: markdown.Markdown) -> None:
-        url_processor = URLProcessor(self.url_func)
+        url_processor = URLProcessor(self.convert_url)
         md.treeprocessors.register(url_processor, "url", 10)
 
 
 class MarkdownConvertor(Convertor):
     def __init__(self, config: dict) -> None:
-        self.base_url = config["site"]["url"]
         self.template_dir = config["build"]["template_dir"]
         loader = jinja2.FileSystemLoader(self.template_dir)
         self.env = jinja2.Environment(loader=loader)
@@ -60,21 +60,18 @@ class MarkdownConvertor(Convertor):
         return os.path.join(output_path, "index.html")
 
     def convert(self, file: File, env: Env) -> None:
-        from mkdocs2.core import url_function_for_file
-
-        url_func = url_function_for_file(file, env.files, base_url=self.base_url)
-        md = markdown.Markdown(
-            extensions=[TransformURLExtension(url_func=url_func), "fenced_code"]
-        )
-
         template = self.env.get_template("base.html")
-        text = file.read_input_text()
-        content = md.convert(text)
+
+        url = functools.partial(env.get_url, from_file=file)
         nav = env.nav
         nav_page = nav.lookup_page(file)
-        html = template.render(
-            content=content, url=url_func, nav=nav, nav_page=nav_page
+
+        md = markdown.Markdown(
+            extensions=[TransformURLExtension(convert_url=url), "fenced_code"]
         )
+        text = file.read_input_text()
+        content = md.convert(text)
+        html = template.render(content=content, url=url, nav=nav, nav_page=nav_page)
         file.write_output_text(html)
 
 

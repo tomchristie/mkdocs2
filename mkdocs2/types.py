@@ -1,5 +1,7 @@
 import os
+import posixpath
 import typing
+from urllib.parse import urlparse, urlunparse, urljoin
 
 
 class Convertor:
@@ -254,7 +256,44 @@ class Env:
     The entire set of build information.
     """
 
-    def __init__(self, files: Files, nav: Nav, config: typing.Dict) -> None:
+    def __init__(
+        self, files: Files, nav: Nav, base_url: str = None, config: typing.Dict = None
+    ) -> None:
         self.files = files
         self.nav = nav
-        self.config = config
+        self.config = {} if config is None else config
+        self.base_url = base_url
+
+    def get_url(self, hyperlink: str, from_file: File) -> str:
+        scheme, netloc, path, params, query, fragment = urlparse(hyperlink)
+        if scheme or netloc or not path:
+            # Leave any absolute URLs, or param/query/fragment URLs as they are.
+            return hyperlink
+
+        if path.startswith("/"):
+            # Determine possible file that an absolute path URL might point to.
+            file_path = path.replace("/", os.path.sep)
+        else:
+            # Determine possible file that a relative path URL might point to.
+            file_path = path.replace("/", os.path.sep)
+            file_path = os.path.join(os.path.dirname(from_file.input_path), file_path)
+            file_path = os.path.normpath(file_path)
+
+        try:
+            # If the path links to a local file, use that to determine the URL.
+            file = self.files.get_by_input_path(file_path)
+        except KeyError:
+            # If the path links to a built URL, use that.
+            file = self.files.get_by_url_path(path)
+
+        if self.base_url is None:
+            # Create a relative URL.
+            scheme, netloc, path = ("", "", posixpath.relpath(file.url, from_file.url))
+            if file.url.endswith("/") and not path.endswith("/"):
+                path += "/"
+        else:
+            # Create an absolute URL, using the base_url.
+            scheme, netloc, path, _, _, _ = urlparse(urljoin(self.base_url, file.url))
+
+        # Include any params, query, or fragment.
+        return urlunparse((scheme, netloc, path, params, query, fragment))

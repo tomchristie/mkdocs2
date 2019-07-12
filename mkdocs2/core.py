@@ -2,11 +2,11 @@ from mkdocs2 import convertors, types
 from urllib.parse import urlparse, urlunparse, urljoin
 import fnmatch
 import os
-import posixpath
 import typing
 
 
 def build(config: typing.Dict) -> None:
+    base_url = config["site"]["url"]
     input_dir = config["build"]["input_dir"]
     output_dir = config["build"]["output_dir"]
     nav_info = config.get("nav", {})
@@ -17,7 +17,7 @@ def build(config: typing.Dict) -> None:
         input_dir=input_dir, output_dir=output_dir, file_convertors=file_convertors
     )
     nav = load_nav(nav_info, files)
-    env = types.Env(files, nav, config)
+    env = types.Env(files, nav, base_url, config)
     for file in files:
         dirname = os.path.dirname(file.full_output_path)
         if not os.path.exists(dirname):
@@ -96,41 +96,3 @@ def load_nav_items(
             nav_group = types.NavGroup(title=title, children=children)
             nav_items.append(nav_group)
     return nav_items
-
-
-def url_function_for_file(
-    from_file: types.File, files: types.Files, base_url: str = None
-) -> typing.Callable[[str], str]:
-    """
-    Returns a `url()` function to use for converting any URLs in the given file.
-    """
-
-    def url(hyperlink: str) -> str:
-        scheme, netloc, path, params, query, fragment = urlparse(hyperlink)
-        if scheme or netloc or not path:
-            return hyperlink
-
-        if path.startswith("/"):
-            # Path-absolute URLs are treated as-is.
-            files.get_by_url_path(path)
-            url = path
-        else:
-            # Path-relative URLs are treated as links to files.
-            # We resolve which file is being referenced in order to determine
-            # what the URL should be.
-            path = path.replace("/", os.path.sep)
-            path = os.path.join(os.path.dirname(from_file.input_path), path)
-            path = os.path.normpath(path)
-            file = files.get_by_input_path(path)
-            url = file.url
-
-        if base_url is None:
-            path = posixpath.relpath(url, from_file.url)
-            if url.endswith("/") and not path.endswith("/"):
-                path += "/"
-        else:
-            scheme, netloc, path, _, _, _ = urlparse(urljoin(base_url, url))
-
-        return urlunparse((scheme, netloc, path, params, query, fragment))
-
-    return url

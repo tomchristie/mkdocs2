@@ -1,3 +1,4 @@
+import functools
 import os
 from mkdocs2 import core, convertors, types
 
@@ -292,12 +293,29 @@ def test_url_function():
         ]
     )
 
+    nav = types.Nav(
+        [
+            types.NavPage(title="Home", file=files[0]),
+            types.NavGroup(
+                title="Topics",
+                children=[
+                    types.NavPage(title="Topic A", file=files[1]),
+                    types.NavPage(title="Topic B", file=files[2]),
+                ],
+            ),
+        ]
+    )
+
     assert files[0].url == "/"
     assert files[1].url == "/topics/a/"
     assert files[2].url == "/topics/b/"
+    assert nav[0].url == "/"
+    assert nav[1].children[0].url == "/topics/a/"
+    assert nav[1].children[1].url == "/topics/b/"
 
     # No base URL.
-    url = core.url_function_for_file(files[0], files)
+    env = types.Env(files=files, nav=nav)
+    url = functools.partial(env.get_url, from_file=files[0])
     assert url("#anchor") == "#anchor"
     assert url("https://www.example.com") == "https://www.example.com"
     assert url("topics/a.md") == "topics/a/"
@@ -305,20 +323,22 @@ def test_url_function():
     assert url("/topics/a/") == "topics/a/"
     assert url("/topics/b/") == "topics/b/"
 
-    url = core.url_function_for_file(files[1], files)
+    url = functools.partial(env.get_url, from_file=files[1])
     assert url("../index.md") == "../../"
     assert url("b.md") == "../b/"
     assert url("/") == "../../"
     assert url("/topics/b/") == "../b/"
 
-    url = core.url_function_for_file(files[2], files)
+    url = functools.partial(env.get_url, from_file=files[2])
     assert url("../index.md") == "../../"
     assert url("a.md#anchor") == "../a/#anchor"
     assert url("/") == "../../"
     assert url("/topics/a/#anchor") == "../a/#anchor"
 
     # Host relative base URL.
-    url = core.url_function_for_file(files[0], files, base_url="/")
+    env = types.Env(files=files, nav=nav, base_url="/")
+
+    url = functools.partial(env.get_url, from_file=files[0])
     assert url("#anchor") == "#anchor"
     assert url("https://www.example.com") == "https://www.example.com"
     assert url("topics/a.md") == "/topics/a/"
@@ -326,20 +346,22 @@ def test_url_function():
     assert url("/topics/a/") == "/topics/a/"
     assert url("/topics/b/") == "/topics/b/"
 
-    url = core.url_function_for_file(files[1], files, base_url="/")
+    url = functools.partial(env.get_url, from_file=files[1])
     assert url("../index.md") == "/"
     assert url("b.md") == "/topics/b/"
     assert url("/") == "/"
     assert url("/topics/b/") == "/topics/b/"
 
-    url = core.url_function_for_file(files[2], files, base_url="/")
+    url = functools.partial(env.get_url, from_file=files[2])
     assert url("../index.md") == "/"
     assert url("a.md#anchor") == "/topics/a/#anchor"
     assert url("/") == "/"
     assert url("/topics/a/#anchor") == "/topics/a/#anchor"
 
     # Absolute base URL.
-    url = core.url_function_for_file(files[0], files, base_url="https://example.com")
+    env = types.Env(files=files, nav=nav, base_url="https://example.com")
+
+    url = functools.partial(env.get_url, from_file=files[0])
     assert url("#anchor") == "#anchor"
     assert url("https://www.example.com") == "https://www.example.com"
     assert url("topics/a.md") == "https://example.com/topics/a/"
@@ -347,13 +369,13 @@ def test_url_function():
     assert url("/topics/a/") == "https://example.com/topics/a/"
     assert url("/topics/b/") == "https://example.com/topics/b/"
 
-    url = core.url_function_for_file(files[1], files, base_url="https://example.com")
+    url = functools.partial(env.get_url, from_file=files[1])
     assert url("../index.md") == "https://example.com/"
     assert url("b.md") == "https://example.com/topics/b/"
     assert url("/") == "https://example.com/"
     assert url("/topics/b/") == "https://example.com/topics/b/"
 
-    url = core.url_function_for_file(files[2], files, base_url="https://example.com")
+    url = functools.partial(env.get_url, from_file=files[2])
     assert url("../index.md") == "https://example.com/"
     assert url("a.md#anchor") == "https://example.com/topics/a/#anchor"
     assert url("/") == "https://example.com/"
