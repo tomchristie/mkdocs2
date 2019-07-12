@@ -166,6 +166,11 @@ def test_load_nav():
     assert topic_a.parent is topics
     assert topic_b.parent is topics
 
+    # Ensure basic `__bool__`, `__len__`, `__iter__` interfaces are supported.
+    assert nav
+    assert len(nav) == 2
+    assert len(list(nav)) == 2
+
 
 def test_activate_nav():
     config = {"site": {"url": "/"}, "build": {"template_dir": "templates"}}
@@ -215,21 +220,21 @@ def test_activate_nav():
     assert not nav[1].is_active
     assert not nav[1].children[0].is_active
     assert not nav[1].children[0].is_active
-    nav.deactivate()
+    nav.deactivate(files[0])
 
     nav.activate(files[1])
     assert not nav[0].is_active
     assert nav[1].is_active
     assert nav[1].children[0].is_active
     assert not nav[1].children[1].is_active
-    nav.deactivate()
+    nav.deactivate(files[1])
 
     nav.activate(files[2])
     assert not nav[0].is_active
     assert nav[1].is_active
     assert not nav[1].children[0].is_active
     assert nav[1].children[1].is_active
-    nav.deactivate()
+    nav.deactivate(files[2])
 
 
 def test_urls_for_files():

@@ -44,6 +44,9 @@ class File:
             and self.output_dir == other.output_dir
         )
 
+    def __hash__(self) -> int:
+        return hash(self.output_path)
+
     @property
     def url(self) -> str:
         dirname, basename = os.path.split(self.output_path)
@@ -143,14 +146,11 @@ class NavGroup:
             and self.children == other.children
         )
 
-    def activate(self, file: File) -> None:
+    def walk_pages(self) -> typing.List["NavPage"]:
+        pages = []
         for child in self.children:
-            child.activate(file)
-
-    def deactivate(self) -> None:
-        self.is_active = False
-        for child in self.children:
-            child.deactivate()
+            pages.extend(child.walk_pages())
+        return pages
 
 
 class NavPage:
@@ -165,6 +165,8 @@ class NavPage:
         self.is_active = False
         self.title = title
         self.file = file
+        self.previous = None  # type: typing.Optional[NavPage]
+        self.next = None  # type: typing.Optional[NavPage]
         self.parent = None  # type: typing.Optional[NavGroup]
 
     def __eq__(self, other: typing.Any) -> bool:
@@ -174,20 +176,39 @@ class NavPage:
             and self.file == other.file
         )
 
-    def activate(self, file: File) -> None:
-        if file == self.file:
-            nav = self
-            while nav is not None:
-                nav.is_active = True
-                nav = nav.parent
+    def walk_pages(self) -> typing.List["NavPage"]:
+        return [self]
 
-    def deactivate(self) -> None:
-        self.is_active = False
+    @property
+    def url(self) -> str:
+        return self.file.url
 
 
 class Nav:
-    def __init__(self, items: typing.List[typing.Union[NavGroup, NavPage]]):
+    def __init__(self, items: typing.List[typing.Union[NavGroup, NavPage]]) -> None:
         self.items = items
+
+        # Get an list of all the NavPages, in order.
+        pages = self.walk_pages()
+
+        # Create a lookup from `File`->`NavPage`
+        self.map_file_to_page = {page.file: page for page in pages}
+
+        # Set the `.previous` and `.next` attributes on each page.
+        indexes = range(len(pages))
+        first_index = 0
+        final_index = len(pages) - 1
+        previous_pages = [
+            None if idx == first_index else pages[idx - 1] for idx in indexes
+        ]
+        next_pages = [None if idx == final_index else pages[idx + 1] for idx in indexes]
+        previous_current_next = zip(previous_pages, pages, next_pages)
+
+        for previous_page, current_page, next_page in previous_current_next:
+            if previous_page is not None:
+                current_page.previous = previous_page
+            if next_page is not None:
+                current_page.next = next_page
 
     def __iter__(self) -> typing.Iterable[typing.Union[NavGroup, NavPage]]:
         return iter(self.items)
@@ -195,16 +216,37 @@ class Nav:
     def __getitem__(self, idx: int) -> typing.Union[NavGroup, NavPage]:
         return self.items[idx]
 
+    def __len__(self) -> int:
+        return len(self.items)
+
+    def __bool__(self) -> bool:
+        return bool(self.items)
+
     def __eq__(self, other: typing.Any) -> bool:
         return type(self) == type(other) and self.items == other.items
 
-    def activate(self, file: File) -> None:
+    def walk_pages(self) -> typing.List["NavPage"]:
+        pages = []
         for item in self.items:
-            item.activate(file)
+            pages.extend(item.walk_pages())
+        return pages
 
-    def deactivate(self) -> None:
-        for item in self.items:
-            item.deactivate()
+    def lookup_page(self, file: File) -> typing.Optional[NavPage]:
+        return self.map_file_to_page.get(file)
+
+    def activate(self, file: File) -> None:
+        page = self.lookup_page(file)
+        nav_item = typing.cast(typing.Union[None, NavPage, NavGroup], page)
+        while nav_item is not None:
+            nav_item.is_active = True
+            nav_item = nav_item.parent
+
+    def deactivate(self, file: File) -> None:
+        page = self.lookup_page(file)
+        nav_item = typing.cast(typing.Union[None, NavPage, NavGroup], page)
+        while nav_item is not None:
+            nav_item.is_active = False
+            nav_item = nav_item.parent
 
 
 class Env:

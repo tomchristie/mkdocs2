@@ -70,7 +70,11 @@ class MarkdownConvertor(Convertor):
         template = self.env.get_template("base.html")
         text = file.read_input_text()
         content = md.convert(text)
-        html = template.render(content=content, url=url_func, nav=env.nav)
+        nav = env.nav
+        nav_page = nav.lookup_page(file)
+        html = template.render(
+            content=content, url=url_func, nav=nav, nav_page=nav_page
+        )
         file.write_output_text(html)
 
 
