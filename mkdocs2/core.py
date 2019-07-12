@@ -6,7 +6,7 @@ import typing
 
 
 def build(config: typing.Dict) -> None:
-    base_url = config["site"]["url"]
+    base_url = config["site"].get("url")
     input_dir = config["build"]["input_dir"]
     output_dir = config["build"]["output_dir"]
     nav_info = config.get("nav", {})
@@ -16,7 +16,7 @@ def build(config: typing.Dict) -> None:
     files = gather_files(
         input_dir=input_dir, output_dir=output_dir, file_convertors=file_convertors
     )
-    nav = load_nav(nav_info, files)
+    nav = load_nav(nav_info, files, base_url)
     env = types.Env(files, nav, base_url, config)
     for file in files:
         dirname = os.path.dirname(file.full_output_path)
@@ -24,7 +24,7 @@ def build(config: typing.Dict) -> None:
             os.makedirs(dirname)
         nav.activate(file)
         file.convertor.convert(file, env)
-        nav.deactivate(file)
+        nav.deactivate()
 
 
 def gather_files(
@@ -74,12 +74,12 @@ def gather_files(
     return files
 
 
-def load_nav(nav_info: dict, files: types.Files) -> types.Nav:
+def load_nav(nav_info: dict, files: types.Files, base_url: str = None) -> types.Nav:
     """
     Determine the navigation info.
     """
     nav_items = load_nav_items(nav_info=nav_info, files=files)
-    return types.Nav(nav_items)
+    return types.Nav(nav_items, base_url=base_url)
 
 
 def load_nav_items(

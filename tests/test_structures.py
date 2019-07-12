@@ -221,21 +221,21 @@ def test_activate_nav():
     assert not nav[1].is_active
     assert not nav[1].children[0].is_active
     assert not nav[1].children[0].is_active
-    nav.deactivate(files[0])
+    nav.deactivate()
 
     nav.activate(files[1])
     assert not nav[0].is_active
     assert nav[1].is_active
     assert nav[1].children[0].is_active
     assert not nav[1].children[1].is_active
-    nav.deactivate(files[1])
+    nav.deactivate()
 
     nav.activate(files[2])
     assert not nav[0].is_active
     assert nav[1].is_active
     assert not nav[1].children[0].is_active
     assert nav[1].children[1].is_active
-    nav.deactivate(files[2])
+    nav.deactivate()
 
 
 def test_urls_for_files():
@@ -380,3 +380,109 @@ def test_url_function():
     assert url("a.md#anchor") == "https://example.com/topics/a/#anchor"
     assert url("/") == "https://example.com/"
     assert url("/topics/a/#anchor") == "https://example.com/topics/a/#anchor"
+
+
+def test_nav_absolute_urls():
+    config = {"build": {"template_dir": "templates"}}
+    markdown_convertor = convertors.MarkdownConvertor(config=config)
+    input_dir = "input"
+    output_dir = "output"
+
+    files = types.Files(
+        [
+            types.File(
+                input_path="index.md",
+                output_path="index.html",
+                input_dir=input_dir,
+                output_dir=output_dir,
+                convertor=markdown_convertor,
+            ),
+            types.File(
+                input_path=os.path.join("topics", "a.md"),
+                output_path=os.path.join("topics", "a", "index.html"),
+                input_dir=input_dir,
+                output_dir=output_dir,
+                convertor=markdown_convertor,
+            ),
+            types.File(
+                input_path=os.path.join("topics", "b.md"),
+                output_path=os.path.join("topics", "b", "index.html"),
+                input_dir=input_dir,
+                output_dir=output_dir,
+                convertor=markdown_convertor,
+            ),
+        ]
+    )
+
+    nav = types.Nav(
+        items=[
+            types.NavPage(title="Home", file=files[0]),
+            types.NavGroup(
+                title="Topics",
+                children=[
+                    types.NavPage(title="Topic A", file=files[1]),
+                    types.NavPage(title="Topic B", file=files[2]),
+                ],
+            ),
+        ],
+        base_url="http://www.example.com",
+    )
+
+    nav.activate(files[1])
+    assert nav[0].url == "http://www.example.com/"
+    assert nav[1].children[0].url == "http://www.example.com/topics/a/"
+    assert nav[1].children[1].url == "http://www.example.com/topics/b/"
+    nav.deactivate()
+
+
+def test_nav_relative_urls():
+    config = {"build": {"template_dir": "templates"}}
+    markdown_convertor = convertors.MarkdownConvertor(config=config)
+    input_dir = "input"
+    output_dir = "output"
+
+    files = types.Files(
+        [
+            types.File(
+                input_path="index.md",
+                output_path="index.html",
+                input_dir=input_dir,
+                output_dir=output_dir,
+                convertor=markdown_convertor,
+            ),
+            types.File(
+                input_path=os.path.join("topics", "a.md"),
+                output_path=os.path.join("topics", "a", "index.html"),
+                input_dir=input_dir,
+                output_dir=output_dir,
+                convertor=markdown_convertor,
+            ),
+            types.File(
+                input_path=os.path.join("topics", "b.md"),
+                output_path=os.path.join("topics", "b", "index.html"),
+                input_dir=input_dir,
+                output_dir=output_dir,
+                convertor=markdown_convertor,
+            ),
+        ]
+    )
+
+    nav = types.Nav(
+        items=[
+            types.NavPage(title="Home", file=files[0]),
+            types.NavGroup(
+                title="Topics",
+                children=[
+                    types.NavPage(title="Topic A", file=files[1]),
+                    types.NavPage(title="Topic B", file=files[2]),
+                ],
+            ),
+        ],
+        base_url=None,
+    )
+
+    nav.activate(files[1])
+    assert nav[0].url == "../../"
+    assert nav[1].children[0].url == "."
+    assert nav[1].children[1].url == "../b/"
+    nav.deactivate()

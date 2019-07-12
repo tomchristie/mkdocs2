@@ -170,6 +170,7 @@ class NavPage:
         self.previous = None  # type: typing.Optional[NavPage]
         self.next = None  # type: typing.Optional[NavPage]
         self.parent = None  # type: typing.Optional[NavGroup]
+        self._nav = None  # type: typing.Optional[Nav]
 
     def __eq__(self, other: typing.Any) -> bool:
         return (
@@ -182,16 +183,38 @@ class NavPage:
         return [self]
 
     @property
+    def nav(self) -> "Nav":
+        assert self._nav is not None
+        return self._nav
+
+    @property
     def url(self) -> str:
-        return self.file.url
+        if self.nav.base_url is None:
+            if self.nav.active_page is None:
+                return self.file.url
+            else:
+                if self.file == self.nav.active_page.file:
+                    return "."
+                path = posixpath.relpath(self.file.url, self.nav.active_page.file.url)
+                if self.file.url.endswith("/") and not path.endswith("/"):
+                    path += "/"
+                return path
+        else:
+            return urljoin(self.nav.base_url, self.file.url)
 
 
 class Nav:
-    def __init__(self, items: typing.List[typing.Union[NavGroup, NavPage]]) -> None:
+    def __init__(
+        self, items: typing.List[typing.Union[NavGroup, NavPage]], base_url: str = None
+    ) -> None:
         self.items = items
+        self.active_page = None  # type: typing.Optional[NavPage]
+        self.base_url = base_url
 
         # Get an list of all the NavPages, in order.
         pages = self.walk_pages()
+        for page in pages:
+            page._nav = self
 
         # Create a lookup from `File`->`NavPage`
         self.map_file_to_page = {page.file: page for page in pages}
@@ -237,18 +260,18 @@ class Nav:
         return self.map_file_to_page.get(file)
 
     def activate(self, file: File) -> None:
-        page = self.lookup_page(file)
-        nav_item = typing.cast(typing.Union[None, NavPage, NavGroup], page)
+        self.active_page = self.lookup_page(file)
+        nav_item = typing.cast(typing.Union[None, NavPage, NavGroup], self.active_page)
         while nav_item is not None:
             nav_item.is_active = True
             nav_item = nav_item.parent
 
-    def deactivate(self, file: File) -> None:
-        page = self.lookup_page(file)
-        nav_item = typing.cast(typing.Union[None, NavPage, NavGroup], page)
+    def deactivate(self) -> None:
+        nav_item = typing.cast(typing.Union[None, NavPage, NavGroup], self.active_page)
         while nav_item is not None:
             nav_item.is_active = False
             nav_item = nav_item.parent
+        self.active_page = None
 
 
 class Env:
@@ -261,13 +284,26 @@ class Env:
     ) -> None:
         self.files = files
         self.nav = nav
-        self.config = {} if config is None else config
         self.base_url = base_url
+        self.config = {} if config is None else config
 
     def get_url(self, hyperlink: str, from_file: File) -> str:
+        """
+        Given a `hyperlink` which may be either a link to a local file,
+        or a regular URL, determine the URL that it should be referenced as.
+
+        We need to know which `from_file` we're referencing the link from, so that:
+
+        * We can resolve any relative paths, against that file.
+        * We can output the final URL as a relative path, if no base URL is set.
+        """
         scheme, netloc, path, params, query, fragment = urlparse(hyperlink)
-        if scheme or netloc or not path:
-            # Leave any absolute URLs, or param/query/fragment URLs as they are.
+        if scheme and netloc:
+            # Leave any absolute URLs as they are.
+            return hyperlink
+
+        if not scheme and not netloc and not path:
+            # Leave any params/query/frament only URLs as they are:
             return hyperlink
 
         if path.startswith("/"):
@@ -287,13 +323,13 @@ class Env:
             file = self.files.get_by_url_path(path)
 
         if self.base_url is None:
-            # Create a relative URL.
+            # No `base_url` to use. Create a relative URL.
             scheme, netloc, path = ("", "", posixpath.relpath(file.url, from_file.url))
             if file.url.endswith("/") and not path.endswith("/"):
                 path += "/"
         else:
-            # Create an absolute URL, using the base_url.
+            # Create an absolute URL, using the `base_url`.
             scheme, netloc, path, _, _, _ = urlparse(urljoin(self.base_url, file.url))
 
-        # Include any params, query, or fragment.
+        # Include any `params`, `query`, or `fragment` components that were present.
         return urlunparse((scheme, netloc, path, params, query, fragment))
