@@ -23,7 +23,7 @@ def test_gather_files(tmpdir):
     template_dir = os.path.join(tmpdir, "templates")
 
     config = {"site": {"url": "/"}, "build": {"template_dir": template_dir}}
-    markdown_convertor = convertors.MarkdownConvertor(config=config)
+    markdown_convertor = convertors.MarkdownPages(config=config)
 
     index_md = os.path.join(input_dir, "index.md")
     a_md = os.path.join(input_dir, "a.md")
@@ -76,8 +76,8 @@ def test_overwrite_files(tmpdir):
     template_dir = os.path.join(tmpdir, "templates")
 
     config = {"site": {"url": "/"}, "build": {"template_dir": template_dir}}
-    markdown_convertor = convertors.MarkdownConvertor(config=config)
-    static_file_convertor = convertors.StaticFileConvertor(config=config)
+    markdown_convertor = convertors.MarkdownPages(config=config)
+    static_file_convertor = convertors.StaticFiles(config=config)
 
     primary_txt = os.path.join(primary_input_dir, "a.txt")
     secondary_txt = os.path.join(secondary_input_dir, "a.txt")
@@ -108,7 +108,7 @@ def test_load_nav():
     template_dir = "templates"
 
     config = {"site": {"url": "/"}, "build": {"template_dir": template_dir}}
-    markdown_convertor = convertors.MarkdownConvertor(config=config)
+    markdown_convertor = convertors.MarkdownPages(config=config)
 
     files = types.Files(
         [
@@ -175,7 +175,7 @@ def test_load_nav():
 
 def test_activate_nav():
     config = {"site": {"url": "/"}, "build": {"template_dir": "templates"}}
-    markdown_convertor = convertors.MarkdownConvertor(config=config)
+    markdown_convertor = convertors.MarkdownPages(config=config)
 
     files = types.Files(
         [
@@ -240,7 +240,7 @@ def test_activate_nav():
 
 def test_urls_for_files():
     config = {"site": {"url": "/"}, "build": {"template_dir": "templates"}}
-    markdown_convertor = convertors.MarkdownConvertor(config=config)
+    markdown_convertor = convertors.MarkdownPages(config=config)
 
     file = types.File(
         input_path="index.md",
@@ -263,7 +263,7 @@ def test_urls_for_files():
 
 def test_url_function():
     config = {"site": {"url": "/"}, "build": {"template_dir": "templates"}}
-    markdown_convertor = convertors.MarkdownConvertor(config=config)
+    markdown_convertor = convertors.MarkdownPages(config=config)
     input_dir = "input"
     output_dir = "output"
 
@@ -384,7 +384,7 @@ def test_url_function():
 
 def test_nav_absolute_urls():
     config = {"build": {"template_dir": "templates"}}
-    markdown_convertor = convertors.MarkdownConvertor(config=config)
+    markdown_convertor = convertors.MarkdownPages(config=config)
     input_dir = "input"
     output_dir = "output"
 
@@ -437,7 +437,7 @@ def test_nav_absolute_urls():
 
 def test_nav_relative_urls():
     config = {"build": {"template_dir": "templates"}}
-    markdown_convertor = convertors.MarkdownConvertor(config=config)
+    markdown_convertor = convertors.MarkdownPages(config=config)
     input_dir = "input"
     output_dir = "output"
 
