@@ -10,8 +10,8 @@ def build(config: typing.Dict) -> None:
     input_dir = config["build"]["input_dir"]
     output_dir = config["build"]["output_dir"]
     nav_info = config.get("nav", {})
-    file_convertors = {}  # type: typing.Dict[str, convertors.Convertor]
-    file_convertors["**.md"] = convertors.MarkdownConvertor(config)
+    file_convertors = {}  # type: typing.Dict[str, types.Convertor]
+    file_convertors["**.md"] = convertors.MarkdownPages(config)
 
     files = gather_files(
         input_dir=input_dir, output_dir=output_dir, file_convertors=file_convertors
@@ -41,7 +41,7 @@ def gather_files(
     Determine all of the files in the input directory.
     """
     if default_convertor is None:
-        default_convertor = convertors.StaticFileConvertor(config={})
+        default_convertor = convertors.StaticFiles(config={})
     if file_convertors is None:
         file_convertors = {}
 
