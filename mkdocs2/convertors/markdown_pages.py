@@ -10,10 +10,7 @@ from mkdocs2.markdown_extensions.convert_urls import ConvertURLs
 
 
 class MarkdownPages(Convertor):
-    def __init__(self, config: dict) -> None:
-        self.template_dir = config["build"]["template_dir"]
-        loader = jinja2.FileSystemLoader(self.template_dir)
-        self.env = jinja2.Environment(loader=loader)
+    patterns = ["**.md"]
 
     def get_output_path(self, input_path: str) -> str:
         output_path = os.path.splitext(input_path)[0]
@@ -22,30 +19,29 @@ class MarkdownPages(Convertor):
         return os.path.join(output_path, "index.html")
 
     def build_toc(self, file: File, env: Env) -> typing.Optional[TableOfContents]:
+        # See https://python-markdown.github.io/extensions/toc/
+
+        def get_headers(toc_tokens: typing.List[dict]) -> typing.List[Header]:
+            return [
+                Header(
+                    id=token["id"],
+                    name=token["name"],
+                    level=token["level"],
+                    children=get_headers(token["children"]),
+                )
+                for token in toc_tokens
+            ]
+
         md = Markdown(extensions=[TocExtension()])
         text = file.read_input_text()
         content = md.convert(text)
-        headers = self.tokens_to_headers(md.toc_tokens)
+        headers = get_headers(md.toc_tokens)
         return TableOfContents(headers)
 
-    def tokens_to_headers(self, tokens: dict) -> typing.List[Header]:
-        # See https://python-markdown.github.io/extensions/toc/
-        return [
-            Header(
-                id=token["id"],
-                name=token["name"],
-                level=token["level"],
-                children=self.tokens_to_headers(token["children"]),
-            )
-            for token in tokens
-        ]
-
     def convert(self, file: File, env: Env) -> None:
-        template = self.env.get_template("base.html")
-
         url = functools.partial(env.get_url, from_file=file)
+        current_page = env.nav.lookup_page(file)
         nav = env.nav
-        current_page = nav.lookup_page(file)
 
         md = Markdown(
             extensions=[
@@ -63,5 +59,5 @@ class MarkdownPages(Convertor):
             "current_page": current_page,
             "toc": file.toc,
         }
-        html = template.render(context)
+        html = env.render_template("base.html", context)
         file.write_output_text(html)

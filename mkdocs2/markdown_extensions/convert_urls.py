@@ -30,8 +30,8 @@ class URLProcessor(Treeprocessor):
 
 class ConvertURLs(Extension):
     """
-    The Extension class is what we pass to markdown, it then
-    registers the Treeprocessor.
+    A Markdown extension that converts all URLs within the markdown document,
+    using the passed `convert_url` function.
     """
 
     def __init__(self, convert_url: typing.Callable[[str], str]) -> None:

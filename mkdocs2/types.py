@@ -1,3 +1,5 @@
+import fnmatch
+import jinja2
 import os
 import posixpath
 import typing
@@ -9,8 +11,10 @@ class Convertor:
     Responsible for converting the source input file to the built output file.
     """
 
-    def __init__(self, config: dict) -> None:
-        pass  # pragma: no cover
+    patterns: typing.List[str] = []
+
+    def should_handle_file(self, input_path: str) -> bool:
+        return any([fnmatch.fnmatch(input_path, pattern) for pattern in self.patterns])
 
     def get_output_path(self, input_path: str) -> str:
         raise NotImplementedError()  # pragma: no cover
@@ -332,12 +336,22 @@ class Env:
     """
 
     def __init__(
-        self, files: Files, nav: Nav, base_url: str = None, config: typing.Dict = None
+        self,
+        files: Files,
+        nav: Nav,
+        template_dir: str,
+        base_url: str = None,
+        config: typing.Dict = None,
     ) -> None:
         self.files = files
         self.nav = nav
         self.base_url = base_url
+        self.template_env = self.get_template_env(template_dir)
         self.config = {} if config is None else config
+
+    def get_template_env(self, template_dir: str) -> jinja2.Environment:
+        loader = jinja2.FileSystemLoader(template_dir)
+        return jinja2.Environment(loader=loader)
 
     def get_url(self, hyperlink: str, from_file: File) -> str:
         """
@@ -385,3 +399,7 @@ class Env:
 
         # Include any `params`, `query`, or `fragment` components that were present.
         return urlunparse((scheme, netloc, path, params, query, fragment))
+
+    def render_template(self, template_path: str, context: dict) -> str:
+        template = self.template_env.get_template(template_path)
+        return template.render(context)

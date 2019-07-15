@@ -4,8 +4,8 @@ from mkdocs2.types import Convertor, File, Env, TableOfContents
 
 
 class StaticFiles(Convertor):
-    def __init__(self, config: dict) -> None:
-        pass
+    def should_handle_file(self, input_path: str) -> bool:
+        return True
 
     def get_output_path(self, input_path: str) -> str:
         return input_path

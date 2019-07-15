@@ -1,6 +1,7 @@
 import functools
 import os
-from mkdocs2 import core, convertors, types
+from mkdocs2 import core, types
+from mkdocs2.convertors import MarkdownPages, StaticFiles
 
 
 def write_file(path, text):
@@ -20,10 +21,7 @@ def test_gather_files(tmpdir):
     """
     input_dir = os.path.join(tmpdir, "input")
     output_dir = os.path.join(tmpdir, "output")
-    template_dir = os.path.join(tmpdir, "templates")
-
-    config = {"site": {"url": "/"}, "build": {"template_dir": template_dir}}
-    markdown_convertor = convertors.MarkdownPages(config=config)
+    convertors = [MarkdownPages()]
 
     index_md = os.path.join(input_dir, "index.md")
     a_md = os.path.join(input_dir, "a.md")
@@ -31,10 +29,9 @@ def test_gather_files(tmpdir):
     write_file(index_md, "index")
     write_file(a_md, "aaa")
     write_file(b_md, "bbb")
-    file_convertors = {"**.md": markdown_convertor}
 
     files = core.gather_files(
-        input_dir=input_dir, output_dir=output_dir, file_convertors=file_convertors
+        input_dir=input_dir, output_dir=output_dir, convertors=convertors
     )
     assert files == types.Files(
         [
@@ -43,21 +40,21 @@ def test_gather_files(tmpdir):
                 output_path=os.path.join("a", "index.html"),
                 input_dir=input_dir,
                 output_dir=output_dir,
-                convertor=markdown_convertor,
+                convertor=convertors[0],
             ),
             types.File(
                 input_path=os.path.join("b", "b.md"),
                 output_path=os.path.join("b", "b", "index.html"),
                 input_dir=input_dir,
                 output_dir=output_dir,
-                convertor=markdown_convertor,
+                convertor=convertors[0],
             ),
             types.File(
                 input_path="index.md",
                 output_path="index.html",
                 input_dir=input_dir,
                 output_dir=output_dir,
-                convertor=markdown_convertor,
+                convertor=convertors[0],
             ),
         ]
     )
@@ -73,19 +70,19 @@ def test_overwrite_files(tmpdir):
     primary_input_dir = os.path.join(tmpdir, "primary")
     secondary_input_dir = os.path.join(tmpdir, "secondary")
     output_dir = os.path.join(tmpdir, "output")
-    template_dir = os.path.join(tmpdir, "templates")
-
-    config = {"site": {"url": "/"}, "build": {"template_dir": template_dir}}
-    markdown_convertor = convertors.MarkdownPages(config=config)
-    static_file_convertor = convertors.StaticFiles(config=config)
 
     primary_txt = os.path.join(primary_input_dir, "a.txt")
     secondary_txt = os.path.join(secondary_input_dir, "a.txt")
     write_file(primary_txt, "aaa")
     write_file(secondary_txt, "bbb")
 
-    secondary = core.gather_files(input_dir=secondary_input_dir, output_dir=output_dir)
-    primary = core.gather_files(input_dir=primary_input_dir, output_dir=output_dir)
+    convertors = [StaticFiles()]
+    secondary = core.gather_files(
+        input_dir=secondary_input_dir, output_dir=output_dir, convertors=convertors
+    )
+    primary = core.gather_files(
+        input_dir=primary_input_dir, output_dir=output_dir, convertors=convertors
+    )
     files = secondary + primary
 
     assert len(files) == 1
@@ -96,7 +93,7 @@ def test_overwrite_files(tmpdir):
                 output_path="a.txt",
                 input_dir=primary_input_dir,
                 output_dir=output_dir,
-                convertor=static_file_convertor,
+                convertor=convertors[0],
             )
         ]
     )
@@ -105,10 +102,7 @@ def test_overwrite_files(tmpdir):
 def test_load_nav():
     input_dir = "input"
     output_dir = "output"
-    template_dir = "templates"
-
-    config = {"site": {"url": "/"}, "build": {"template_dir": template_dir}}
-    markdown_convertor = convertors.MarkdownPages(config=config)
+    markdown_convertor = MarkdownPages()
 
     files = types.Files(
         [
@@ -174,9 +168,6 @@ def test_load_nav():
 
 
 def test_activate_nav():
-    config = {"site": {"url": "/"}, "build": {"template_dir": "templates"}}
-    markdown_convertor = convertors.MarkdownPages(config=config)
-
     files = types.Files(
         [
             types.File(
@@ -184,21 +175,21 @@ def test_activate_nav():
                 output_path="index.html",
                 input_dir="docs",
                 output_dir="build",
-                convertor=markdown_convertor,
+                convertor=MarkdownPages(),
             ),
             types.File(
                 input_path=os.path.join("topics", "a.md"),
                 output_path=os.path.join("topics", "a", "index.html"),
                 input_dir="docs",
                 output_dir="build",
-                convertor=markdown_convertor,
+                convertor=MarkdownPages(),
             ),
             types.File(
                 input_path=os.path.join("topics", "b.md"),
                 output_path=os.path.join("topics", "b", "index.html"),
                 input_dir="docs",
                 output_dir="build",
-                convertor=markdown_convertor,
+                convertor=MarkdownPages(),
             ),
         ]
     )
@@ -239,15 +230,12 @@ def test_activate_nav():
 
 
 def test_urls_for_files():
-    config = {"site": {"url": "/"}, "build": {"template_dir": "templates"}}
-    markdown_convertor = convertors.MarkdownPages(config=config)
-
     file = types.File(
         input_path="index.md",
         output_path="index.html",
         input_dir="input",
         output_dir="output",
-        convertor=markdown_convertor,
+        convertor=MarkdownPages(),
     )
     assert file.url == "/"
 
@@ -256,14 +244,12 @@ def test_urls_for_files():
         output_path="page.html",
         input_dir="input",
         output_dir="output",
-        convertor=markdown_convertor,
+        convertor=MarkdownPages(),
     )
     assert file.url == "/page.html"
 
 
 def test_url_function():
-    config = {"site": {"url": "/"}, "build": {"template_dir": "templates"}}
-    markdown_convertor = convertors.MarkdownPages(config=config)
     input_dir = "input"
     output_dir = "output"
 
@@ -274,21 +260,21 @@ def test_url_function():
                 output_path="index.html",
                 input_dir=input_dir,
                 output_dir=output_dir,
-                convertor=markdown_convertor,
+                convertor=MarkdownPages(),
             ),
             types.File(
                 input_path=os.path.join("topics", "a.md"),
                 output_path=os.path.join("topics", "a", "index.html"),
                 input_dir=input_dir,
                 output_dir=output_dir,
-                convertor=markdown_convertor,
+                convertor=MarkdownPages(),
             ),
             types.File(
                 input_path=os.path.join("topics", "b.md"),
                 output_path=os.path.join("topics", "b", "index.html"),
                 input_dir=input_dir,
                 output_dir=output_dir,
-                convertor=markdown_convertor,
+                convertor=MarkdownPages(),
             ),
         ]
     )
@@ -314,7 +300,7 @@ def test_url_function():
     assert nav[1].children[1].url == "/topics/b/"
 
     # No base URL.
-    env = types.Env(files=files, nav=nav)
+    env = types.Env(files=files, nav=nav, template_dir="templates")
     url = functools.partial(env.get_url, from_file=files[0])
     assert url("#anchor") == "#anchor"
     assert url("https://www.example.com") == "https://www.example.com"
@@ -336,7 +322,7 @@ def test_url_function():
     assert url("/topics/a/#anchor") == "../a/#anchor"
 
     # Host relative base URL.
-    env = types.Env(files=files, nav=nav, base_url="/")
+    env = types.Env(files=files, nav=nav, template_dir="templates", base_url="/")
 
     url = functools.partial(env.get_url, from_file=files[0])
     assert url("#anchor") == "#anchor"
@@ -359,7 +345,9 @@ def test_url_function():
     assert url("/topics/a/#anchor") == "/topics/a/#anchor"
 
     # Absolute base URL.
-    env = types.Env(files=files, nav=nav, base_url="https://example.com")
+    env = types.Env(
+        files=files, nav=nav, template_dir="templates", base_url="https://example.com"
+    )
 
     url = functools.partial(env.get_url, from_file=files[0])
     assert url("#anchor") == "#anchor"
@@ -383,8 +371,6 @@ def test_url_function():
 
 
 def test_nav_absolute_urls():
-    config = {"build": {"template_dir": "templates"}}
-    markdown_convertor = convertors.MarkdownPages(config=config)
     input_dir = "input"
     output_dir = "output"
 
@@ -395,21 +381,21 @@ def test_nav_absolute_urls():
                 output_path="index.html",
                 input_dir=input_dir,
                 output_dir=output_dir,
-                convertor=markdown_convertor,
+                convertor=MarkdownPages(),
             ),
             types.File(
                 input_path=os.path.join("topics", "a.md"),
                 output_path=os.path.join("topics", "a", "index.html"),
                 input_dir=input_dir,
                 output_dir=output_dir,
-                convertor=markdown_convertor,
+                convertor=MarkdownPages(),
             ),
             types.File(
                 input_path=os.path.join("topics", "b.md"),
                 output_path=os.path.join("topics", "b", "index.html"),
                 input_dir=input_dir,
                 output_dir=output_dir,
-                convertor=markdown_convertor,
+                convertor=MarkdownPages(),
             ),
         ]
     )
@@ -436,8 +422,6 @@ def test_nav_absolute_urls():
 
 
 def test_nav_relative_urls():
-    config = {"build": {"template_dir": "templates"}}
-    markdown_convertor = convertors.MarkdownPages(config=config)
     input_dir = "input"
     output_dir = "output"
 
@@ -448,21 +432,21 @@ def test_nav_relative_urls():
                 output_path="index.html",
                 input_dir=input_dir,
                 output_dir=output_dir,
-                convertor=markdown_convertor,
+                convertor=MarkdownPages(),
             ),
             types.File(
                 input_path=os.path.join("topics", "a.md"),
                 output_path=os.path.join("topics", "a", "index.html"),
                 input_dir=input_dir,
                 output_dir=output_dir,
-                convertor=markdown_convertor,
+                convertor=MarkdownPages(),
             ),
             types.File(
                 input_path=os.path.join("topics", "b.md"),
                 output_path=os.path.join("topics", "b", "index.html"),
                 input_dir=input_dir,
                 output_dir=output_dir,
-                convertor=markdown_convertor,
+                convertor=MarkdownPages(),
             ),
         ]
     )

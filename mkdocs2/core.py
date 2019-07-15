@@ -1,4 +1,5 @@
 from mkdocs2 import convertors, types
+from mkdocs2.convertors import MarkdownPages, StaticFiles
 from urllib.parse import urlparse, urlunparse, urljoin
 import fnmatch
 import os
@@ -9,15 +10,15 @@ def build(config: typing.Dict) -> None:
     base_url = config["site"].get("url")
     input_dir = config["build"]["input_dir"]
     output_dir = config["build"]["output_dir"]
+    template_dir = config["build"]["template_dir"]
     nav_info = config.get("nav", {})
-    file_convertors = {}  # type: typing.Dict[str, types.Convertor]
-    file_convertors["**.md"] = convertors.MarkdownPages(config)
+    convertors = [MarkdownPages(), StaticFiles()]
 
     files = gather_files(
-        input_dir=input_dir, output_dir=output_dir, file_convertors=file_convertors
+        input_dir=input_dir, output_dir=output_dir, convertors=convertors
     )
     nav = load_nav(nav_info, files, base_url)
-    env = types.Env(files, nav, base_url, config)
+    env = types.Env(files, nav, template_dir, base_url, config=config)
     for file in files:
         file.toc = file.convertor.build_toc(file, env)
 
@@ -33,17 +34,12 @@ def build(config: typing.Dict) -> None:
 def gather_files(
     input_dir: str,
     output_dir: str,
-    default_convertor: types.Convertor = None,
-    file_convertors: typing.Dict[str, types.Convertor] = None,
+    convertors: typing.List[types.Convertor],
     sub_dir: str = "",
 ) -> types.Files:
     """
     Determine all of the files in the input directory.
     """
-    if default_convertor is None:
-        default_convertor = convertors.StaticFiles(config={})
-    if file_convertors is None:
-        file_convertors = {}
 
     files = types.Files()
     dirname = os.path.join(input_dir, sub_dir)
@@ -54,26 +50,23 @@ def gather_files(
             files += gather_files(
                 input_dir=input_dir,
                 output_dir=output_dir,
-                default_convertor=default_convertor,
-                file_convertors=file_convertors,
+                convertors=convertors,
                 sub_dir=next_sub_dir,
             )
         else:
             input_path = os.path.join(sub_dir, basename)
-            convertor = default_convertor
-            for pattern, file_convertor in file_convertors.items():
-                if fnmatch.fnmatch(input_path, pattern):
-                    convertor = file_convertor
+            for convertor in convertors:
+                if convertor.should_handle_file(input_path):
+                    output_path = convertor.get_output_path(input_path)
+                    file = types.File(
+                        input_path=input_path,
+                        output_path=output_path,
+                        input_dir=input_dir,
+                        output_dir=output_dir,
+                        convertor=convertor,
+                    )
+                    files.append(file)
                     break
-            output_path = convertor.get_output_path(input_path)
-            file = types.File(
-                input_path=input_path,
-                output_path=output_path,
-                input_dir=input_dir,
-                output_dir=output_dir,
-                convertor=convertor,
-            )
-            files.append(file)
     return files
 
 
