@@ -1,5 +1,4 @@
-from mkdocs2 import convertors, types
-from mkdocs2.convertors import MarkdownPages, StaticFiles
+from mkdocs2 import types
 from urllib.parse import urlparse, urlunparse, urljoin
 import fnmatch
 import importlib
