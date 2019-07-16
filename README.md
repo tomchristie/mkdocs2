@@ -11,28 +11,23 @@ a public working space for progressing the project.
 **mkdocs.yml**:
 
 ```yaml
-site:
-    name: Example
-    url: https://www.example.com/
-
 build:
+    url: https://www.example.com/
     input_dir: docs
-    output_dir: site
     template_dir: templates
+    output_dir: build
 
 nav:
-    - Homepage: index.md
-    - Topics:
-        - Section A: topics/a.md
-        - Section B: topics/b.md
+    Home: index.md
+    Page A: page-a.md
+    Page B: page-b.md
+    Topics:
+        Topic A: topics/topic-a.md
+        Topic B: topics/topic-b.md
+        Topic C: topics/topic-c.md
 
 convertors:
-    markdown:
-        class: mkdocs2.convertors.MarkdownConvertor
-        patterns:
-            - **.md
-    html:
-        class: mkdocs2.convertors.TemplateConvertor
-        patterns:
-            - **.html
+    - mkdocs2.convertors:MarkdownPages
+    - mkdocs2.convertors:StaticFiles
+    - mkdocs2.convertors:CodeHighlight
 ```
