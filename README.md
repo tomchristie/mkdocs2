@@ -1,4 +1,4 @@
-# MkDocs2
+# MkDocs 2
 
 This repository is exploring the design of a possible next iteration of `mkdocs`.
 
