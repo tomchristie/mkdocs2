@@ -2,6 +2,7 @@ from mkdocs2 import convertors, types
 from mkdocs2.convertors import MarkdownPages, StaticFiles
 from urllib.parse import urlparse, urlunparse, urljoin
 import fnmatch
+import importlib
 import os
 import typing
 
@@ -12,7 +13,12 @@ def build(config: typing.Dict) -> None:
     output_dir = config["build"]["output_dir"]
     template_dir = config["build"]["template_dir"]
     nav_info = config.get("nav", {})
-    convertors = [MarkdownPages(), StaticFiles()]
+
+    convertors = []
+    for convertor_info in config["convertors"]:
+        cls = import_from_string(convertor_info)
+        assert issubclass(cls, types.Convertor)
+        convertors.append(cls())
 
     files = gather_files(
         input_dir=input_dir, output_dir=output_dir, convertors=convertors
@@ -92,3 +98,20 @@ def load_nav_items(
             nav_group = types.NavGroup(title=title, children=children)
             nav_items.append(nav_group)
     return nav_items
+
+
+def import_from_string(import_str: str) -> typing.Any:
+    module_str, _, attrs_str = import_str.partition(".")
+
+    try:
+        lookup = importlib.import_module(module_str)
+    except ImportError as exc:
+        raise ValueError(f"Could not import module {module_str!r}.")
+
+    try:
+        for attr in attrs_str.split("."):
+            lookup = getattr(lookup, attr)
+    except AttributeError as exc:
+        raise ValueError(f"Attribute {attrs_str!r} not found in module {module_str!r}.")
+
+    return lookup

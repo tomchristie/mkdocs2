@@ -1,5 +1,7 @@
 import os
 import mkdocs2
+import pytest
+from mkdocs2.core import import_from_string
 
 
 def write_file(path, text):
@@ -39,5 +41,20 @@ def test_build(tmpdir):
             "Homepage": "index.md",
             "Topics": {"Topic A": "topics/a.md", "Topic B": "topics/b.md"},
         },
+        "convertors": [
+            "mkdocs2.convertors.MarkdownPages",
+            "mkdocs2.convertors.StaticFiles",
+        ]
     }
     mkdocs2.build(config=config)
+
+
+def test_import_from_string():
+    cls = import_from_string('mkdocs2.convertors.MarkdownPages')
+    assert issubclass(cls, mkdocs2.types.Convertor)
+
+    with pytest.raises(ValueError):
+        import_from_string('invalidmodulename.convertors.MarkdownPages')
+
+    with pytest.raises(ValueError):
+        import_from_string('mkdocs2.convertors.InvalidAttribute')

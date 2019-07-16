@@ -50,6 +50,9 @@ nav:
     Topics:
         Topic A: topics/a.md
         Topic B: topics/b.md
+convertors:
+    - mkdocs2.convertors.MarkdownPages
+    - mkdocs2.convertors.StaticFiles
 """,
     )
 
