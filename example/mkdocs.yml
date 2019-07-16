@@ -1,0 +1,19 @@
+build:
+    url: https://www.example.com
+    input_dir: docs
+    template_dir: templates
+    output_dir: build
+
+nav:
+    Home: index.md
+    Page A: page-a.md
+    Page B: page-b.md
+    Topics:
+        Topic A: topics/topic-a.md
+        Topic B: topics/topic-b.md
+        Topic C: topics/topic-c.md
+
+convertors:
+    - mkdocs2.convertors:MarkdownPages
+    - mkdocs2.convertors:StaticFiles
+    - mkdocs2.convertors:CodeHighlight

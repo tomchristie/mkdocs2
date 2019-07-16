@@ -1,0 +1,91 @@
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Starter Template for Bootstrap</title>
+
+    <link href="{{ url('/css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url('/css/base.css') }}" rel="stylesheet">
+    <link href="{{ url('/css/highlight.css') }}" rel="stylesheet">
+    <script>
+        var shiftWindow = function() {
+          scrollBy(0, -70)
+        };
+
+        if (location.hash) shiftWindow();
+        window.addEventListener("hashchange", shiftWindow);
+    </script>
+  </head>
+
+  <body>
+
+    <nav class="navbar navbar-expand-md navbar-light bg-light fixed-top">
+        <div class="container">
+      <a class="navbar-brand" href="{{ url('/') }}">Navbar</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+        <ul class="navbar-nav mr-auto">
+          {% for nav_item in nav %}
+            {% if nav_item.is_page %}
+            <li class="nav-item {% if nav_item.is_active %}active{% endif %}">
+              <a class="nav-link" href="{{ nav_item.url }}">{{ nav_item.title }} <span class="sr-only">(current)</span></a>
+            </li>
+            {% elif nav_item.is_group %}
+            <li class="nav-item dropdown {% if nav_item.is_active %}active{% endif %}">
+              <a class="nav-link dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{ nav_item.title }}</a>
+              <div class="dropdown-menu">
+                {% for child in nav_item.children %}
+                    <a class="dropdown-item {% if child.is_active %}active{% endif %}" href="{{ child.url }}">{{ child.title }}</a>
+                {% endfor %}
+              </div>
+            </li>
+            {% endif %}
+          {% endfor %}
+        </ul>
+        <div>
+            {% if current_page.previous %}
+                <a class="btn btn-secondary" href="{{ current_page.previous.url }}">Previous</a>
+            {% else %}
+                <a class="btn btn-secondary disabled" href="#">Previous</a>
+            {% endif %}
+            {% if current_page.next %}
+                <a class="btn btn-secondary" href="{{ current_page.next.url }}">Next</a>
+            {% else %}
+                <a class="btn btn-secondary disabled" href="#">Next</a>
+            {% endif %}
+        </div>
+      </div>
+  </div>
+    </nav>
+
+    <main role="main" class="container">
+        <div class="row">
+            <div class="col-md-3">
+                <ul class="nav sidebar">
+                {% for header in toc.headers %}
+                <li><a href="#{{header.id}}">{{ header.name }}</a></li>
+                {% endfor %}
+                </ul>
+            </div>
+            <div class="col-md-9">
+                {{ content }}
+            </div>
+        </div>
+    </main>
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="{{ url('/js/jquery-slim.min.js') }}"></script>
+    <script src="{{ url('/js/popper.min.js') }}"></script>
+    <script src="{{ url('/js/bootstrap.min.js') }}"></script>
+  </body>
+</html>
