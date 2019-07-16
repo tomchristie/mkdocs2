@@ -10,6 +10,9 @@ class StaticFiles(Convertor):
     def get_output_path(self, input_path: str) -> str:
         return input_path
 
+    def get_extra_paths(self) -> typing.List[str]:
+        return []
+
     def build_toc(self, file: File, env: Env) -> typing.Optional[TableOfContents]:
         return None
 

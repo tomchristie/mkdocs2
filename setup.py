@@ -74,6 +74,7 @@ setup(
         'click',
         'jinja2',
         'markdown',
+        'pygments',
         'pyyaml',
     ],
     classifiers=[

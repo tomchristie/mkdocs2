@@ -1,4 +1,5 @@
 from mkdocs2.types import Convertor, File, Files, TableOfContents, Header, Env
+import fnmatch
 import functools
 import os
 import jinja2
@@ -12,11 +13,17 @@ from mkdocs2.markdown_extensions.convert_urls import ConvertURLs
 class MarkdownPages(Convertor):
     patterns = ["**.md"]
 
+    def should_handle_file(self, input_path: str) -> bool:
+        return any([fnmatch.fnmatch(input_path, pattern) for pattern in self.patterns])
+
     def get_output_path(self, input_path: str) -> str:
         output_path = os.path.splitext(input_path)[0]
         if os.path.basename(output_path) == "index":
             return output_path + ".html"
         return os.path.join(output_path, "index.html")
+
+    def get_extra_paths(self) -> typing.List[str]:
+        return []
 
     def build_toc(self, file: File, env: Env) -> typing.Optional[TableOfContents]:
         # See https://python-markdown.github.io/extensions/toc/

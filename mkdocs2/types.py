@@ -1,4 +1,3 @@
-import fnmatch
 import jinja2
 import os
 import posixpath
@@ -10,13 +9,13 @@ class Convertor:
     """
     Responsible for converting the source input file to the built output file.
     """
-
-    patterns: typing.List[str] = []
-
     def should_handle_file(self, input_path: str) -> bool:
-        return any([fnmatch.fnmatch(input_path, pattern) for pattern in self.patterns])
+        raise NotImplementedError()  # pragma: no cover
 
     def get_output_path(self, input_path: str) -> str:
+        raise NotImplementedError()  # pragma: no cover
+
+    def get_extra_paths(self) -> typing.List[str]:
         raise NotImplementedError()  # pragma: no cover
 
     def build_toc(self, file: "File", env: "Env") -> typing.Optional["TableOfContents"]:

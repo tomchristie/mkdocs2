@@ -20,7 +20,7 @@ def test_build(tmpdir):
     output_dir = os.path.join(tmpdir, "output")
     template_dir = os.path.join(tmpdir, "templates")
     index_md = os.path.join(input_dir, "index.md")
-    favicon = os.path.join(input_dir, "favicon.ico")
+    favicon = os.path.join(input_dir, "img", "favicon.ico")
     a_md = os.path.join(input_dir, "topics", "a.md")
     b_md = os.path.join(input_dir, "topics", "b.md")
     base_html = os.path.join(template_dir, "base.html")
@@ -43,10 +43,21 @@ def test_build(tmpdir):
         },
         "convertors": [
             "mkdocs2.convertors.MarkdownPages",
+            "mkdocs2.convertors.CodeHighlight",
             "mkdocs2.convertors.StaticFiles",
         ],
     }
     mkdocs2.build(config=config)
+
+    expected_files = [
+        os.path.join(output_dir, "index.html"),
+        os.path.join(output_dir, "topics", "a", "index.html"),
+        os.path.join(output_dir, "topics", "b", "index.html"),
+        os.path.join(output_dir, "img", "favicon.ico"),
+        os.path.join(output_dir, "css", "highlight.css"),
+    ]
+    for path in expected_files:
+        assert os.path.exists(path)
 
 
 def test_import_from_string():

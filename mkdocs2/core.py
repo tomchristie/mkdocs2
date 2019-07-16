@@ -51,6 +51,7 @@ def gather_files(
     for basename in sorted(os.listdir(dirname)):
         path = os.path.join(dirname, basename)
         if os.path.isdir(path):
+            # Descend into sub-directories.
             next_sub_dir = os.path.join(sub_dir, basename)
             files += gather_files(
                 input_dir=input_dir,
@@ -59,6 +60,7 @@ def gather_files(
                 sub_dir=next_sub_dir,
             )
         else:
+            # Determine if there are any convertors that handle the given file.
             input_path = os.path.join(sub_dir, basename)
             for convertor in convertors:
                 if convertor.should_handle_file(input_path):
@@ -72,6 +74,19 @@ def gather_files(
                     )
                     files.append(file)
                     break
+
+    # Add any extra files that are provided by a convertor class.
+    for convertor in convertors:
+        for path in convertor.get_extra_paths():
+            file = types.File(
+                input_path='',
+                output_path=path,
+                input_dir='',
+                output_dir=output_dir,
+                convertor=convertor
+            )
+            files.append(file)
+
     return files
 
 
