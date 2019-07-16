@@ -39,9 +39,8 @@ def test_build(tmpdir):
     write_file(
         config,
         """
-site:
-    url: /
 build:
+    url: /
     input_dir: input
     output_dir: output
     template_dir: templates

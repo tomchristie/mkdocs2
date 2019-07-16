@@ -23,7 +23,7 @@ def serve(config_file: typing.TextIO) -> None:  # pragma: nocover
     config = yaml.load(content)
 
     with tempfile.TemporaryDirectory() as tmpdir:
-        config["site"]["url"] = "/"
+        config["build"]["url"] = "http://127.0.0.1:8000/"
         config["build"]["output_dir"] = tmpdir
         mkdocs2.build(config)
         os.chdir(tmpdir)

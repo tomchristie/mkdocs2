@@ -31,7 +31,6 @@ def test_build(tmpdir):
     write_file(base_html, "<html><body>{{ content }}</body></html>")
 
     config = {
-        "site": {"url": "/"},
         "build": {
             "input_dir": input_dir,
             "output_dir": output_dir,

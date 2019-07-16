@@ -7,7 +7,7 @@ import typing
 
 
 def build(config: typing.Dict) -> None:
-    base_url = config["site"].get("url")
+    base_url = config["build"].get("url")
     input_dir = config["build"]["input_dir"]
     output_dir = config["build"]["output_dir"]
     template_dir = config["build"]["template_dir"]
