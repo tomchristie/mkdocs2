@@ -9,6 +9,7 @@ class Convertor:
     """
     Responsible for converting the source input file to the built output file.
     """
+
     def should_handle_file(self, input_path: str) -> bool:
         raise NotImplementedError()  # pragma: no cover
 

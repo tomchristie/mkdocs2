@@ -60,7 +60,7 @@ def gather_files(
                 sub_dir=next_sub_dir,
             )
         else:
-            # Determine if there are any convertors that handle the given file.
+            #  Determine if there are any convertors that handle the given file.
             input_path = os.path.join(sub_dir, basename)
             for convertor in convertors:
                 if convertor.should_handle_file(input_path):
@@ -79,11 +79,11 @@ def gather_files(
     for convertor in convertors:
         for path in convertor.get_extra_paths():
             file = types.File(
-                input_path='',
+                input_path="",
                 output_path=path,
-                input_dir='',
+                input_dir="",
                 output_dir=output_dir,
-                convertor=convertor
+                convertor=convertor,
             )
             files.append(file)
 
@@ -115,7 +115,7 @@ def load_nav_items(
 
 
 def import_from_string(import_str: str) -> typing.Any:
-    module_str, _, attrs_str = import_str.partition(".")
+    module_str, _, attrs_str = import_str.partition(":")
 
     try:
         lookup = importlib.import_module(module_str)

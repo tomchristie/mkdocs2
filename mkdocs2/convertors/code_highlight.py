@@ -4,7 +4,9 @@ from pygments.formatters import HtmlFormatter
 
 
 class CodeHighlight(Convertor):
-    def __init__(self, style: str='friendly', path: str='css/highlight.css'):
+    def __init__(
+        self, style: str = "friendly", path: str = "css/highlight.css"
+    ) -> None:
         self.style = style
         self.path = path
 

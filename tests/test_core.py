@@ -42,9 +42,9 @@ def test_build(tmpdir):
             "Topics": {"Topic A": "topics/a.md", "Topic B": "topics/b.md"},
         },
         "convertors": [
-            "mkdocs2.convertors.MarkdownPages",
-            "mkdocs2.convertors.CodeHighlight",
-            "mkdocs2.convertors.StaticFiles",
+            "mkdocs2.convertors:MarkdownPages",
+            "mkdocs2.convertors:CodeHighlight",
+            "mkdocs2.convertors:StaticFiles",
         ],
     }
     mkdocs2.build(config=config)
@@ -61,11 +61,11 @@ def test_build(tmpdir):
 
 
 def test_import_from_string():
-    cls = import_from_string("mkdocs2.convertors.MarkdownPages")
+    cls = import_from_string("mkdocs2.convertors:MarkdownPages")
     assert issubclass(cls, mkdocs2.types.Convertor)
 
     with pytest.raises(ValueError):
-        import_from_string("invalidmodulename.convertors.MarkdownPages")
+        import_from_string("invalidmodulename.convertors:MarkdownPages")
 
     with pytest.raises(ValueError):
-        import_from_string("mkdocs2.convertors.InvalidAttribute")
+        import_from_string("mkdocs2.convertors:InvalidAttribute")
