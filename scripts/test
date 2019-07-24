@@ -10,7 +10,7 @@ fi
 
 set -x
 
-${PREFIX}pytest --cov ${PACKAGE} --cov tests --cov-fail-under 100 ./tests/
+${PREFIX}pytest --cov ${PACKAGE} --cov tests --cov-fail-under 100 ./tests/ --cov-report term-missing
 ${PREFIX}mypy --ignore-missing-imports --disallow-untyped-defs ${PACKAGE}
 if [[ ${PYTHONVERSION} == "3.6" ]]; then
     ${PREFIX}black ${PACKAGE} tests --check
