@@ -8,6 +8,7 @@ from markdown import Markdown
 from markdown.extensions.codehilite import CodeHiliteExtension
 from markdown.extensions.toc import TocExtension
 from markdown.extensions.fenced_code import FencedCodeExtension
+from mkdocs2.markdown_extensions.autodoc import AutoDocExtension
 from mkdocs2.markdown_extensions.convert_urls import ConvertURLs
 
 
@@ -55,6 +56,7 @@ class MarkdownPages(Convertor):
             extensions=[
                 TocExtension(permalink=True),
                 FencedCodeExtension(),
+                AutoDocExtension(),
                 CodeHiliteExtension(),
                 ConvertURLs(convert_url=url),
             ]
