@@ -119,7 +119,7 @@ class AutoDocProcessor(BlockProcessor):
 
         if m:
             full_string = m.group(1)
-            import_string, _, name_string = full_string.partition(':')
+            import_string, _, name_string = full_string.rpartition('.')
             attribute = import_from_string(full_string)
             attribute_signature = inspect.signature(attribute)
 
@@ -128,6 +128,11 @@ class AutoDocProcessor(BlockProcessor):
 
             # Eg: `some_module.attribute_name`
             headline_elem = etree.SubElement(autodoc_div, 'p')
+
+            if inspect.isclass(attribute):
+                qualifier_elem = etree.SubElement(headline_elem, 'em')
+                qualifier_elem.text = "class "
+
             import_elem = etree.SubElement(headline_elem, 'code')
             import_elem.text = import_string + '.'
             import_elem.set('class', 'autodoc-import')

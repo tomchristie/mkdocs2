@@ -1,1 +1,1 @@
-from .example_module import example_function
+from .example_module import example_function, ExampleClass

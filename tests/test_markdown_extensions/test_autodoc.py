@@ -4,7 +4,7 @@ from mkdocs2.markdown_extensions.autodoc import AutoDocExtension, trim_docstring
 import inspect
 
 
-def test_autodoc():
+def test_autodoc_function():
     md = Markdown(extensions=[AutoDocExtension()])
     text = md.convert(
         """
@@ -14,12 +14,48 @@ This is an API reference.
 
 ::: import_examples.example_function
     :docstring:
-Some trailing text.
 """)
     assert text == """<h1>API reference</h1>
 <p>This is an API reference.</p>
 <div class="autodoc">
-<p><code class="autodoc-import">import_examples.example_function.</code><code class="autodoc-name"></code><span class="autodoc-punctuation">(</span><em class="autodoc-param">a</em><span class="autodoc-punctuation">, </span><em class="autodoc-param">b=None</em><span class="autodoc-punctuation">, </span><em class="autodoc-param">**kwargs</em><span class="autodoc-punctuation">)</span></p>
+<p><code class="autodoc-import">import_examples.</code><code class="autodoc-name">example_function</code><span class="autodoc-punctuation">(</span><em class="autodoc-param">a</em><span class="autodoc-punctuation">, </span><em class="autodoc-param">b=None</em><span class="autodoc-punctuation">, </span><em class="autodoc-param">**kwargs</em><span class="autodoc-punctuation">)</span></p>
+<div class="autodoc-docstring">
+<p>This is my <em>docstring</em>.</p>
+</div>
+</div>"""
+
+
+def test_autodoc_class():
+    md = Markdown(extensions=[AutoDocExtension()])
+    text = md.convert(
+        """
+# API reference
+
+This is an API reference.
+
+::: import_examples.ExampleClass
+    :docstring:
+""")
+    assert text == """<h1>API reference</h1>
+<p>This is an API reference.</p>
+<div class="autodoc">
+<p><em>class </em><code class="autodoc-import">import_examples.</code><code class="autodoc-name">ExampleClass</code><span class="autodoc-punctuation">(</span><em class="autodoc-param">b=None</em><span class="autodoc-punctuation">, </span><em class="autodoc-param">**kwargs</em><span class="autodoc-punctuation">)</span></p>
+<div class="autodoc-docstring">
+<p>This is my <em>docstring</em>.</p>
+</div>
+</div>"""
+
+
+def test_autodoc_trailing_text():
+    md = Markdown(extensions=[AutoDocExtension()])
+    text = md.convert(
+        """
+::: import_examples.example_function
+    :docstring:
+Some trailing text.
+""")
+    assert text == """<div class="autodoc">
+<p><code class="autodoc-import">import_examples.</code><code class="autodoc-name">example_function</code><span class="autodoc-punctuation">(</span><em class="autodoc-param">a</em><span class="autodoc-punctuation">, </span><em class="autodoc-param">b=None</em><span class="autodoc-punctuation">, </span><em class="autodoc-param">**kwargs</em><span class="autodoc-punctuation">)</span></p>
 <div class="autodoc-docstring">
 <p>This is my <em>docstring</em>.</p>
 </div>
