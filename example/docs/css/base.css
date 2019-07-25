@@ -19,7 +19,7 @@ container a:before {
     display:block;
 }
 
-code.autodoc-import {
+code.autodoc-module {
     color: black;
 }
 
@@ -29,5 +29,9 @@ code.autodoc-name {
 }
 
 div.autodoc-docstring {
+    margin-left: 20px;
+}
+
+div.autodoc-members {
     margin-left: 20px;
 }

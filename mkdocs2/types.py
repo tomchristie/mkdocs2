@@ -225,10 +225,25 @@ class NavPage:
 
 
 class Nav:
+    """
+    Holds the site navigation information, as specified in the `nav`
+    section of the MkDocs configuration.
+
+    May be used by the theme to render a navigation header or site index.
+
+    The navigation has a heirachical structure, with each item either being
+    a `NavPage` linking to a page in the documentation, or a `NavGroup`
+    containing another list of navigation items.
+    """
+
     def __init__(
         self, items: typing.List[typing.Union[NavGroup, NavPage]], base_url: str = None
     ) -> None:
+        # The top-level list of navigation items. Either item may either be
+        # a `NavPage` linking to a page in the documentation, or a `NavGroup`
+        # containing another list of navigation items.
         self.items = items
+
         self.active_page = None  # type: typing.Optional[NavPage]
         self.base_url = base_url
 
