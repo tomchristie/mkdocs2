@@ -31,3 +31,7 @@ code.autodoc-name {
 div.autodoc-docstring {
     margin-left: 20px;
 }
+
+div.autodoc-members {
+    margin-left: 20px;
+}

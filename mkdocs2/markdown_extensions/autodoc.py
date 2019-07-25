@@ -8,6 +8,11 @@ import re
 import typing
 
 
+# Fuzzy regex for determining source lines in __init__ that look like
+# attribute assignments.  Eg. `self.counter = 0`
+SET_ATTRIBUTE = re.compile('^([ \t]*)self[.]([A-Za-z0-9_]+) *=')
+
+
 def get_params(signature: inspect.Signature) -> typing.List[str]:
     """
     Given a function signature, return a list of parameter strings
@@ -95,6 +100,33 @@ def trim_docstring(docstring: typing.Optional[str]) -> str:
     return '\n'.join(trimmed)
 
 
+# def guess_instance_attributes(cls: type) -> typing.Dict[str, str]:
+#     """
+#     Given a class, return a dictionary of {attribute_name: comment}, based
+#     on the source code in the __init__ method.
+#     """
+#     instance_attributes = {}
+#     source_lines, line_no = inspect.getsourcelines(getattr(cls, '__init__'))
+#     for idx, line in enumerate(source_lines):
+#         m = SET_ATTRIBUTE.match(line)
+#         if not m:
+#             continue
+#
+#         whitespace, name = m.group(1), m.group(2)
+#         if name in instance_attributes:
+#             continue
+#
+#         comment_lines = []
+#         for potential in reversed(source_lines[:idx]):
+#             if potential.startswith(whitespace + '# '):
+#                 comment_lines.insert(0, potential[len(whitespace) + 2:])
+#             else:
+#                 break
+#         instance_attributes[name] = ''.join(comment_lines)
+#
+#     return instance_attributes
+
+
 class AutoDocProcessor(BlockProcessor):
 
     CLASSNAME = 'autodoc'
@@ -119,15 +151,18 @@ class AutoDocProcessor(BlockProcessor):
 
         if m:
             import_string = m.group(1)
-            attribute = import_from_string(import_string)
+            item = import_from_string(import_string)
 
             autodoc_div = etree.SubElement(parent, 'div')
             autodoc_div.set('class', self.CLASSNAME)
 
-            self.render_signature(autodoc_div, attribute, import_string)
+            self.render_signature(autodoc_div, item, import_string)
             for line in block.splitlines():
                 if line.startswith(":docstring:"):
-                    self.render_docstring(autodoc_div, attribute)
+                    docstring = trim_docstring(item.__doc__)
+                    self.render_docstring(autodoc_div, item, docstring)
+                elif line.startswith(":members:"):
+                    self.render_members(autodoc_div, item)
 
         #else:
         #    self.parser.parseChunk(sibling, block)
@@ -138,21 +173,22 @@ class AutoDocProcessor(BlockProcessor):
             # list for future processing.
             blocks.insert(0, theRest)
 
-    def render_signature(self, elem: etree.Element, attribute: typing.Any, import_string: str) -> None:
+    def render_signature(self, elem: etree.Element, item: typing.Any, import_string: str) -> None:
         module_string, _, name_string = import_string.rpartition('.')
-        attribute_signature = inspect.signature(attribute)
+        signature = inspect.signature(item)
 
         # Eg: `some_module.attribute_name`
         signature_elem = etree.SubElement(elem, 'p')
         signature_elem.set('class', 'autodoc-signature')
 
-        if inspect.isclass(attribute):
+        if inspect.isclass(item):
             qualifier_elem = etree.SubElement(signature_elem, 'em')
             qualifier_elem.text = "class "
 
-        import_elem = etree.SubElement(signature_elem, 'code')
-        import_elem.text = module_string + '.'
-        import_elem.set('class', 'autodoc-module')
+        if module_string:
+            module_elem = etree.SubElement(signature_elem, 'code')
+            module_elem.text = module_string + '.'
+            module_elem.set('class', 'autodoc-module')
         name_elem = etree.SubElement(signature_elem, 'code')
         name_elem.text = name_string
         name_elem.set('class', 'autodoc-name')
@@ -162,7 +198,7 @@ class AutoDocProcessor(BlockProcessor):
         bracket_elem.text = '('
         bracket_elem.set('class', 'autodoc-punctuation')
 
-        for param, is_last in last_iter(get_params(attribute_signature)):
+        for param, is_last in last_iter(get_params(signature)):
             param_elem = etree.SubElement(signature_elem, 'em')
             param_elem.text = param
             param_elem.set('class', 'autodoc-param')
@@ -176,13 +212,33 @@ class AutoDocProcessor(BlockProcessor):
         bracket_elem.text = ')'
         bracket_elem.set('class', 'autodoc-punctuation')
 
-    def render_docstring(self, elem: etree.Element, attribute: typing.Any) -> None:
-        # Render docstring
+    def render_docstring(self, elem: etree.Element, item: typing.Any, docstring: str) -> None:
         docstring_elem = etree.SubElement(elem, 'div')
         docstring_elem.set('class', 'autodoc-docstring')
-
-        docstring = trim_docstring(attribute.__doc__)
         self.parser.parseChunk(docstring_elem, docstring)
+
+    def render_members(self, elem: etree.Element, item: typing.Any) -> None:
+        members_elem = etree.SubElement(elem, 'div')
+        members_elem.set('class', 'autodoc-members')
+
+        members = {}
+
+        for attribute_name in dir(item):
+            if not attribute_name.startswith('_'):
+                attribute = getattr(item, attribute_name)
+                if hasattr(attribute, '__doc__'):
+                    members[attribute_name] = trim_docstring(attribute.__doc__)
+
+        # if inspect.isclass(item):
+        #    for attribute_name, comment in guess_instance_attributes(item).items():
+        #        if attribute_name not in members:
+        #            members[attribute_name] = comment
+
+        for attribute_name, docs in members.items():
+            attribute = getattr(item, attribute_name)
+            self.render_signature(members_elem, attribute, attribute_name)
+            self.render_docstring(members_elem, attribute, docs)
+
 
 
 class AutoDocExtension(Extension):

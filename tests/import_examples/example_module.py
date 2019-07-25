@@ -12,3 +12,9 @@ class ExampleClass:
 
     def __init__(a, b=None, **kwargs):
         pass  # pragma: nocover
+
+    def example_method(self):
+        """
+        A method *docstring*.
+        """
+        pass  # pragma: nocover
