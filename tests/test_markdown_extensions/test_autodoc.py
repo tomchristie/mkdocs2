@@ -18,7 +18,7 @@ This is an API reference.
     assert text == """<h1>API reference</h1>
 <p>This is an API reference.</p>
 <div class="autodoc">
-<p><code class="autodoc-import">import_examples.</code><code class="autodoc-name">example_function</code><span class="autodoc-punctuation">(</span><em class="autodoc-param">a</em><span class="autodoc-punctuation">, </span><em class="autodoc-param">b=None</em><span class="autodoc-punctuation">, </span><em class="autodoc-param">**kwargs</em><span class="autodoc-punctuation">)</span></p>
+<p class="autodoc-signature"><code class="autodoc-module">import_examples.</code><code class="autodoc-name">example_function</code><span class="autodoc-punctuation">(</span><em class="autodoc-param">a</em><span class="autodoc-punctuation">, </span><em class="autodoc-param">b=None</em><span class="autodoc-punctuation">, </span><em class="autodoc-param">**kwargs</em><span class="autodoc-punctuation">)</span></p>
 <div class="autodoc-docstring">
 <p>This is my <em>docstring</em>.</p>
 </div>
@@ -39,7 +39,7 @@ This is an API reference.
     assert text == """<h1>API reference</h1>
 <p>This is an API reference.</p>
 <div class="autodoc">
-<p><em>class </em><code class="autodoc-import">import_examples.</code><code class="autodoc-name">ExampleClass</code><span class="autodoc-punctuation">(</span><em class="autodoc-param">b=None</em><span class="autodoc-punctuation">, </span><em class="autodoc-param">**kwargs</em><span class="autodoc-punctuation">)</span></p>
+<p class="autodoc-signature"><em>class </em><code class="autodoc-module">import_examples.</code><code class="autodoc-name">ExampleClass</code><span class="autodoc-punctuation">(</span><em class="autodoc-param">b=None</em><span class="autodoc-punctuation">, </span><em class="autodoc-param">**kwargs</em><span class="autodoc-punctuation">)</span></p>
 <div class="autodoc-docstring">
 <p>This is my <em>docstring</em>.</p>
 </div>
@@ -55,7 +55,7 @@ def test_autodoc_trailing_text():
 Some trailing text.
 """)
     assert text == """<div class="autodoc">
-<p><code class="autodoc-import">import_examples.</code><code class="autodoc-name">example_function</code><span class="autodoc-punctuation">(</span><em class="autodoc-param">a</em><span class="autodoc-punctuation">, </span><em class="autodoc-param">b=None</em><span class="autodoc-punctuation">, </span><em class="autodoc-param">**kwargs</em><span class="autodoc-punctuation">)</span></p>
+<p class="autodoc-signature"><code class="autodoc-module">import_examples.</code><code class="autodoc-name">example_function</code><span class="autodoc-punctuation">(</span><em class="autodoc-param">a</em><span class="autodoc-punctuation">, </span><em class="autodoc-param">b=None</em><span class="autodoc-punctuation">, </span><em class="autodoc-param">**kwargs</em><span class="autodoc-punctuation">)</span></p>
 <div class="autodoc-docstring">
 <p>This is my <em>docstring</em>.</p>
 </div>

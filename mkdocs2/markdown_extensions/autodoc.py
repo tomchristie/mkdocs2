@@ -118,53 +118,16 @@ class AutoDocProcessor(BlockProcessor):
         block, theRest = self.detab(block)
 
         if m:
-            full_string = m.group(1)
-            import_string, _, name_string = full_string.rpartition('.')
-            attribute = import_from_string(full_string)
-            attribute_signature = inspect.signature(attribute)
+            import_string = m.group(1)
+            attribute = import_from_string(import_string)
 
             autodoc_div = etree.SubElement(parent, 'div')
             autodoc_div.set('class', self.CLASSNAME)
 
-            # Eg: `some_module.attribute_name`
-            headline_elem = etree.SubElement(autodoc_div, 'p')
-
-            if inspect.isclass(attribute):
-                qualifier_elem = etree.SubElement(headline_elem, 'em')
-                qualifier_elem.text = "class "
-
-            import_elem = etree.SubElement(headline_elem, 'code')
-            import_elem.text = import_string + '.'
-            import_elem.set('class', 'autodoc-import')
-            name_elem = etree.SubElement(headline_elem, 'code')
-            name_elem.text = name_string
-            name_elem.set('class', 'autodoc-name')
-
-            # Eg: `(a, b='default', **kwargs)``
-            bracket_elem = etree.SubElement(headline_elem, 'span')
-            bracket_elem.text = '('
-            bracket_elem.set('class', 'autodoc-punctuation')
-
-            for param, is_last in last_iter(get_params(attribute_signature)):
-                param_elem = etree.SubElement(headline_elem, 'em')
-                param_elem.text = param
-                param_elem.set('class', 'autodoc-param')
-
-                if not is_last:
-                    comma_elem = etree.SubElement(headline_elem, 'span')
-                    comma_elem.text = ', '
-                    comma_elem.set('class', 'autodoc-punctuation')
-
-            bracket_elem = etree.SubElement(headline_elem, 'span')
-            bracket_elem.text = ')'
-            bracket_elem.set('class', 'autodoc-punctuation')
-
-            # Render docstring
-            docstring_elem = etree.SubElement(autodoc_div, 'div')
-            docstring_elem.set('class', 'autodoc-docstring')
-
-            docstring = trim_docstring(attribute.__doc__)
-            self.parser.parseChunk(docstring_elem, docstring)
+            self.render_signature(autodoc_div, attribute, import_string)
+            for line in block.splitlines():
+                if line.startswith(":docstring:"):
+                    self.render_docstring(autodoc_div, attribute)
 
         #else:
         #    self.parser.parseChunk(sibling, block)
@@ -174,6 +137,52 @@ class AutoDocProcessor(BlockProcessor):
             # line. Insert these lines as the first block of the master blocks
             # list for future processing.
             blocks.insert(0, theRest)
+
+    def render_signature(self, elem: etree.Element, attribute: typing.Any, import_string: str) -> None:
+        module_string, _, name_string = import_string.rpartition('.')
+        attribute_signature = inspect.signature(attribute)
+
+        # Eg: `some_module.attribute_name`
+        signature_elem = etree.SubElement(elem, 'p')
+        signature_elem.set('class', 'autodoc-signature')
+
+        if inspect.isclass(attribute):
+            qualifier_elem = etree.SubElement(signature_elem, 'em')
+            qualifier_elem.text = "class "
+
+        import_elem = etree.SubElement(signature_elem, 'code')
+        import_elem.text = module_string + '.'
+        import_elem.set('class', 'autodoc-module')
+        name_elem = etree.SubElement(signature_elem, 'code')
+        name_elem.text = name_string
+        name_elem.set('class', 'autodoc-name')
+
+        # Eg: `(a, b='default', **kwargs)``
+        bracket_elem = etree.SubElement(signature_elem, 'span')
+        bracket_elem.text = '('
+        bracket_elem.set('class', 'autodoc-punctuation')
+
+        for param, is_last in last_iter(get_params(attribute_signature)):
+            param_elem = etree.SubElement(signature_elem, 'em')
+            param_elem.text = param
+            param_elem.set('class', 'autodoc-param')
+
+            if not is_last:
+                comma_elem = etree.SubElement(signature_elem, 'span')
+                comma_elem.text = ', '
+                comma_elem.set('class', 'autodoc-punctuation')
+
+        bracket_elem = etree.SubElement(signature_elem, 'span')
+        bracket_elem.text = ')'
+        bracket_elem.set('class', 'autodoc-punctuation')
+
+    def render_docstring(self, elem: etree.Element, attribute: typing.Any) -> None:
+        # Render docstring
+        docstring_elem = etree.SubElement(elem, 'div')
+        docstring_elem.set('class', 'autodoc-docstring')
+
+        docstring = trim_docstring(attribute.__doc__)
+        self.parser.parseChunk(docstring_elem, docstring)
 
 
 class AutoDocExtension(Extension):

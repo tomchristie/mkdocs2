@@ -19,7 +19,7 @@ container a:before {
     display:block;
 }
 
-code.autodoc-import {
+code.autodoc-module {
     color: black;
 }
 
