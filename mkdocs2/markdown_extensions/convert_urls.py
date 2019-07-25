@@ -39,4 +39,4 @@ class ConvertURLs(Extension):
 
     def extendMarkdown(self, md: Markdown) -> None:
         url_processor = URLProcessor(self.convert_url)
-        md.treeprocessors.register(url_processor, "url", 10)
+        md.treeprocessors.register(url_processor, "convert_url", 10)

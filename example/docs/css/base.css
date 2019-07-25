@@ -18,3 +18,16 @@ container a:before {
     content: "";
     display:block;
 }
+
+code.autodoc-import {
+    color: black;
+}
+
+code.autodoc-name {
+    color: black;
+    font-weight: bold;
+}
+
+div.autodoc-docstring {
+    margin-left: 20px;
+}

@@ -14,6 +14,6 @@ nav:
         Topic C: topics/topic-c.md
 
 convertors:
-    - mkdocs2.convertors:MarkdownPages
-    - mkdocs2.convertors:StaticFiles
-    - mkdocs2.convertors:CodeHighlight
+    - mkdocs2.convertors.MarkdownPages
+    - mkdocs2.convertors.StaticFiles
+    - mkdocs2.convertors.CodeHighlight

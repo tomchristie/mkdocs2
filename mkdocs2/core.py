@@ -7,6 +7,13 @@ import typing
 
 
 def build(config: typing.Dict) -> None:
+    """
+    Builds the documentation.
+
+    **Parameters:**
+
+    * `config` - A MkDocs configuration dictionary.
+    """
     base_url = config["build"].get("url")
     input_dir = config["build"]["input_dir"]
     output_dir = config["build"]["output_dir"]
@@ -115,17 +122,17 @@ def load_nav_items(
 
 
 def import_from_string(import_str: str) -> typing.Any:
-    module_str, _, attrs_str = import_str.partition(":")
+    module_str, _, attr_str = import_str.rpartition(".")
 
     try:
-        lookup = importlib.import_module(module_str)
+        module = importlib.import_module(module_str)
     except ImportError as exc:
+        module_name = module_str.split('.', 1)[0]
+        if exc.name != module_name:
+            raise exc from None
         raise ValueError(f"Could not import module {module_str!r}.")
 
     try:
-        for attr in attrs_str.split("."):
-            lookup = getattr(lookup, attr)
+        return getattr(module, attr_str)
     except AttributeError as exc:
-        raise ValueError(f"Attribute {attrs_str!r} not found in module {module_str!r}.")
-
-    return lookup
+        raise ValueError(f"Attribute {attr_str!r} not found in module {module_str!r}.")
